@@ -3,7 +3,6 @@ const Readers = require("../../models/reader/readerModel");
 const { addDays } = require("date-fns");
 const Books = require("../../models/books/booksModel");
 const sendEmail = require("../../utils/sendMail");
-const tf = require('@tensorflow/tfjs');
 const natural = require("natural")
 
 

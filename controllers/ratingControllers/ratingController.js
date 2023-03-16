@@ -106,7 +106,7 @@ const recommend = (user) => {
   return recommendations;
 };
 
-console.log(recommend(req.params.id)); // Output: [ 'The Great Gatsby' ]
+console.log(recommend(req.params.id)); 
 
 
 }
