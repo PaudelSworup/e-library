@@ -129,7 +129,8 @@ exports.recommendByCategory = async(req,res)=>{
   }
   classifier.train();
 
-  const userInput = ["Animation", "Fantasy"]
+  const userInput = ["Animation", "Fantasy" ,"Mathematics" , "Science"]
+  
 
   const recommendedBooks = [];
   userInput.forEach((input) => {
