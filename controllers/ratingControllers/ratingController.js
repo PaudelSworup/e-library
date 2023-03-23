@@ -1,4 +1,6 @@
 const Ratings = require("../../models/ratings/ratingModel");
+const Books = require("../../models/books/booksModel")
+const natural = require("natural")
 
 exports.provideRating = async (req, res) => {
   let alreadyRated = await Ratings.findOne({
@@ -103,10 +105,61 @@ const recommend = (user) => {
   const recommendations = Object.keys(bookScores).sort(
     (a, b) => bookScores[b] - bookScores[a]
   );
-  return recommendations;
+  return res.status(200).json({
+    success:true,
+    recommendations
+  })
 };
 
-console.log(recommend(req.params.id)); 
-
-
+recommend(req.params.id); 
 }
+
+
+exports.recommendByCategory = async(req,res)=>{
+  // Train the classifier with sample books and their genres
+  let books = await Books.find()
+    .populate("category", "category_name")
+    .select("-createdAt")
+    .select("-updatedAt");
+  
+  
+  const classifier = new natural.BayesClassifier();
+  for (const item of books){
+    classifier.addDocument(item.desc , item.category.category_name)
+  }
+  classifier.train();
+
+  const userInput = ["Animation", "Fantasy"]
+
+  const recommendedBooks = [];
+  userInput.forEach((input) => {
+    // recommendedBooks.length = 0;
+    const classification = classifier.classify(input);
+
+    const relatedBooks = books.filter((book) => book.category.category_name === classification);
+    // const relatedBooks = data.filter((book) => book.category=== classification)
+
+    if (relatedBooks.length > 0) {
+      console.log(`Here are some ${classification} books you might like:`);
+      relatedBooks.forEach((book) => {
+        console.log(book.title);
+        console.log(book.desc);
+        recommendedBooks.push(book);
+      });
+    } else {
+      console.log("Sorry, we don't have any recommendations for that category.");
+    }
+  });
+
+  if (recommendedBooks.length > 0) {
+    res.status(200).send({
+      success:true,
+      recommendedBooks
+    })
+  } else {
+    res.status(404).send({
+      success:false,
+      error:"No books found related to your category"
+    });
+  }
+};

@@ -281,10 +281,4 @@ exports.getHistory = async (req, res) => {
   });
 };
 
-exports.contentBasedFiltering = async (req,res)=>{
-  
-  
- 
 
- 
-}
