@@ -12,6 +12,7 @@ exports.postUser = async (req, res) => {
     address: req.body.address,
     mobilenum: Number(req.body.mobilenum),
     password: req.body.password,
+    choosedCatgoeirs:req.body.choosedCatgoeirs
   });
 
   reader = await reader.save();
@@ -49,7 +50,7 @@ exports.postUser = async (req, res) => {
   });
   return res.status(200).json({
     success: true,
-    message: "User has been created, Check your email to verify your email",
+    message: "User has been created, Check your email to verify your Account",
   });
 };
 

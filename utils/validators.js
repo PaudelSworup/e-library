@@ -85,6 +85,7 @@ exports.readersValidation = [
     .withMessage("password must be atleast 8 character")
     .isLength({ max: 50 })
     .withMessage("password can't be more than 50 character"),
+    check("choosedCatgoeirs", "please choose the categories").notEmpty()
 ];
 
 

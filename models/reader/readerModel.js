@@ -40,6 +40,11 @@ const readerSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    choosedCatgoeirs:{
+      type:[String],
+      required:true,
+    }
   },
   { timestamps: true }
 );

@@ -1,5 +1,6 @@
 const Ratings = require("../../models/ratings/ratingModel");
 const Books = require("../../models/books/booksModel")
+const Readers = require("../../models/reader/readerModel")
 const natural = require("natural")
 
 exports.provideRating = async (req, res) => {
@@ -129,10 +130,23 @@ exports.recommendByCategory = async(req,res)=>{
   }
   classifier.train();
 
-  const userInput = ["Animation", "Fantasy" ,"Mathematics" , "Science"]
   
+   let myInput = await Readers.find({_id:req.params.id}).select("choosedCatgoeirs")
 
+   if(!myInput){
+    res.status(403).json({
+      success:false,
+      error:"Something went wrong"
+    })
+   }
+
+  //  const userInput = ["Animation", "Fantasy" ,"Mathematics" , "Science"]
+  const userInput = myInput.map((data)=>(data.choosedCatgoeirs)).flat()
+  
   const recommendedBooks = [];
+  const seen = new Set();
+
+  
   userInput.forEach((input) => {
     // recommendedBooks.length = 0;
     const classification = classifier.classify(input);
@@ -143,9 +157,10 @@ exports.recommendByCategory = async(req,res)=>{
     if (relatedBooks.length > 0) {
       console.log(`Here are some ${classification} books you might like:`);
       relatedBooks.forEach((book) => {
-        console.log(book.title);
-        console.log(book.desc);
-        recommendedBooks.push(book);
+        if (!seen.has(book._id)) {
+          seen.add(book._id);
+          recommendedBooks.push(book);
+        }
       });
     } else {
       console.log("Sorry, we don't have any recommendations for that category.");
@@ -153,6 +168,7 @@ exports.recommendByCategory = async(req,res)=>{
   });
 
   if (recommendedBooks.length > 0) {
+    
     res.status(200).send({
       success:true,
       recommendedBooks
