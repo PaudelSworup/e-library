@@ -180,3 +180,76 @@ exports.recommendByCategory = async(req,res)=>{
     });
   }
 };
+
+exports.browse = async(req,res)=>{
+  const binarySearch = (books, searchTerm)=> {
+    let left = 0;
+    let right = books.length - 1;
+    const results = [];
+  
+    // Linear search to find all books that match the search term
+    books.forEach((book) => {
+      if (book.title.toLowerCase().includes(searchTerm.toLowerCase())) {
+        results.push(book);
+      }
+    });
+  
+    // Binary search to find the index of the first book that matches the search term
+    while (left <= right) {
+      const mid = Math.floor((left + right) / 2);
+      const title = books[mid].title.toLowerCase();
+      
+      if (searchTerm.toLowerCase() === title.substring(0, searchTerm.length)) {
+        // Found a book that matches the search term - add it to the results array
+        results.push(books[mid]);
+        
+        // Check if there are any more matching books to the left of this one
+        for (let i = mid - 1; i >= left; i--) {
+          const title = books[i].title.toLowerCase();
+          if (title.includes(searchTerm.toLowerCase())) {
+            results.push(books[i]);
+          } else {
+            break;
+          }
+        }
+  
+        // Check if there are any more matching books to the right of this one
+        for (let i = mid + 1; i <= right; i++) {
+          const title = books[i].title.toLowerCase();
+          if (title.includes(searchTerm.toLowerCase())) {
+            results.push(books[i]);
+          } else {
+            break;
+          }
+        }
+  
+        // Done searching
+        break;
+      } else if (searchTerm.toLowerCase() < title) {
+        right = mid - 1;
+      } else {
+        left = mid + 1;
+      }
+    }
+  
+    // Remove duplicates from the results array
+    const uniqueResults = results.filter((book, index, self) => 
+      index === self.findIndex((b) => (
+        b.title === book.title 
+      ))
+    );
+  
+    return res.status(200).send({success:true , uniqueResults});
+  }
+  
+  // Example usage:
+  const books = await Books.find()
+  .populate("category", "category_name")
+  .select("-createdAt")
+  .select("-updatedAt");
+  
+  
+ binarySearch(books, 'Harry'); 
+}
+
+

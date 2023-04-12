@@ -18,6 +18,7 @@ const ratingRoute = require("./routes/ratingsRoute/ratingRoute")
 
 
 
+
 // middlewares
 app.use(bodyParser.json())
 app.use(morgan("dev"))
