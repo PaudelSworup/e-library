@@ -8,7 +8,7 @@ router.post("/rate" ,provideRating )
 router.get("/rate" , getratingsDetails)
 router.get("/recommend/:id" , recommendedBooks)
 router.get("/categoryrecommendation/:id", recommendByCategory)
-router.get("/browse",browse)
+router.get("/browse/:name",browse)
 
 
 module.exports = router
