@@ -3,10 +3,6 @@ const Readers = require("../../models/reader/readerModel");
 const { addDays } = require("date-fns");
 const Books = require("../../models/books/booksModel");
 const sendEmail = require("../../utils/sendMail");
-const natural = require("natural")
-
-
-
 
 // to issue request
 exports.issueRequest = async (req, res) => {
@@ -40,7 +36,7 @@ exports.issueRequest = async (req, res) => {
     let bookName = await Books.findOne({ _id: req.body.books_id });
     return res.status(403).json({
       success: false,
-      error: `You can't issue the same books until you return it, i.e you have issued ${bookName.title}, and haven't returned yet`,
+      error: `You can't issue the same books until you return it, i.e you have issued ${bookName.title}`,
     });
   }
 
@@ -50,7 +46,8 @@ exports.issueRequest = async (req, res) => {
       success: false,
       error: "Book is not in the stock right now",
     });
-  } else {
+  } 
+  else {
     books.stock = books.stock - 1;
   }
 
@@ -127,6 +124,7 @@ exports.approveRequest = async (req, res) => {
   let user = await Readers.findOne({
     _id: req.params.id,
   });
+  
 
   if (approve) {
     if (approve.issueStatus == 0) {
@@ -210,6 +208,8 @@ exports.returnBooks = async (req, res) => {
     })
   }
 
+  let book = await Books.findOne({_id:returnedBooks.books_id})
+
   if (returnedBooks.issueStatus == 1) {
     if (returnedBooks.returnStatus == 0) {
       returnedBooks.userReturnedDate = Date.now();
@@ -221,7 +221,9 @@ exports.returnBooks = async (req, res) => {
           10;
         returnedBooks.penalty = fine;
         returnedBooks.returnStatus = 1;
+        book.stock = book.stock+1;
         returnedBooks = await returnedBooks.save();
+        book = await book.save();
         if (!returnedBooks) {
           return res.status(400).json({
             success: false,
@@ -235,7 +237,9 @@ exports.returnBooks = async (req, res) => {
         }
       } else {
         returnedBooks.returnStatus = 1;
+        book.stock = book.stock+1;
         returnedBooks = await returnedBooks.save();
+        book = await book.save();
         return res.status(200).json({
           success: true,
           message: `Books returned`,
@@ -280,5 +284,18 @@ exports.getHistory = async (req, res) => {
     filterData,
   });
 };
+
+
+// exports.getMostRequested = async(req,res)=>{
+
+//   let result= await Reports.aggregate([
+//     {$group:{_id:"$penalty", wholedoc:{$push:"$$ROOT"}}}
+//   ])
+
+  
+
+    
+
+// }
 
 
