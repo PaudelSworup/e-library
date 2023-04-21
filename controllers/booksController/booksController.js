@@ -30,8 +30,6 @@ exports.postBooks = async (req, res) => {
 exports.getBooks = async (req, res) => {
   let books = await Books.find()
     .populate("category", "category_name")
-    .select("-createdAt")
-    .select("-updatedAt");
 
   if (!books) {
     return res.status(400).json({
@@ -83,3 +81,35 @@ exports.deleteBooks = (req, res) => {
       return res.status(400).json({ error: err });
     });
 };
+
+
+// exports.getAllBooks = async (req, res) => {
+//   let books = await Books.find()
+//     // .populate("category", "category_name")
+
+//   if (!books) {
+//     return res.status(400).json({
+//       success: false,
+//       error: "Something went Wrong",
+//     });
+//   }
+
+ 
+//   const recentlyAdded = books.map((data)=>{
+//     return {...data, timestamps:new Date(data.createdAt).getTime()}
+//   })
+  
+
+//   recentlyAdded.sort((a,b)=>b.timestamps - a.timestamps)
+
+//   const recent = recentlyAdded.slice(0,3)
+//   console.log(recent)
+
+
+//   return res.status(200).send({
+//     success: true,
+//     recent,
+//   });
+// };
+
+

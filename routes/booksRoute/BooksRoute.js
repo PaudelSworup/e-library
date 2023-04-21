@@ -12,6 +12,7 @@ const upload = require("../../middlewares/file-upload")
 // routes
 router.post("/books", upload.single("image"), booksValidation , validators,  postBooks)
 router.get("/books",getBooks)
+// router.get("/all", getAllBooks)
 router.post("/returnbooks",returnBooks)
 router.get("/books/:category", getBookByCategory)
 router.delete("/books/:id", deleteBooks)
