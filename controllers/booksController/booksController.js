@@ -44,6 +44,21 @@ exports.getBooks = async (req, res) => {
   });
 };
 
+exports.getSingleBook = async(req,res)=>{
+  let books = await Books.find({_id:req.params.id})
+  if (!books) {
+    return res.status(400).json({
+      success: false,
+      error: "Something went Wrong",
+    });
+  }
+
+  return res.status(200).send({
+    success: true,
+    books,
+  });
+}
+
 exports.getBookByCategory = async (req, res) => {
   let books = await Books.find({ category: req.params.category }).populate(
     "category",
