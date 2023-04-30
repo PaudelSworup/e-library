@@ -286,3 +286,14 @@ exports.browse = async (req, res) => {
 
   binarySearch(books, req.params.name);
 };
+
+
+exports.listBooks = async(req,res)=>{
+  let single_book = await Books.findById(req.params.id)
+  let limit = req.query.limit ? parseInt(req.params.limit) : 6
+  let book = await Books.find({_id:{$ne:single_book}, category:single_book.category}).limit(limit).populate("category", "category_name")
+  if(!book){
+    return res.status(400).json({ success:false, error: "something went wrong" });
+  }
+  return res.status(200).json({success:true , book})
+}
