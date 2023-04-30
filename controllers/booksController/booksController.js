@@ -45,7 +45,7 @@ exports.getBooks = async (req, res) => {
 };
 
 exports.getSingleBook = async(req,res)=>{
-  let books = await Books.find({_id:req.params.id})
+  let books = await Books.find({_id:req.params.id}).populate("category", "category_name")
   if (!books) {
     return res.status(400).json({
       success: false,

@@ -112,6 +112,7 @@ exports.recommendedBooks = async (req, res) => {
     );
 
     // console.log(recommendations)
+    const idRegex = /_id:\s*new\s+ObjectId\("(\w+)"\)/;
     const titleRegex = /title:\s*'([^']*)'/;
     const descRegex = /desc:\s*'([^']*)'/;
     const isbnRegex = /isbn:\s*(\d+)/;
@@ -120,6 +121,7 @@ exports.recommendedBooks = async (req, res) => {
 
     let newRecommendations = [];
     recommendations.forEach((book) => {
+      const idMatch = book.match(idRegex)
       const titleMatch = book.match(titleRegex);
       const descMatch = book.match(descRegex);
       const isbnMatch = book.match(isbnRegex);
@@ -132,7 +134,8 @@ exports.recommendedBooks = async (req, res) => {
         const isbn = isbnMatch[1];
         const stock = stockMatch[1];
         const image = imageMatch[1];
-        newRecommendations.push({ title, desc, isbn, stock, image });
+        const _id = idMatch[1]
+        newRecommendations.push({ _id, title, desc, isbn, stock, image });
       }
     });
 
