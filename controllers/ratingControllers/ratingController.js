@@ -30,7 +30,8 @@ exports.provideRating = async (req, res) => {
     });
   }
 
-  res.status(200).send({
+  res.cookie("userID", req.body.user, { httpOnly: true });
+  return res.status(200).send({
     success: true,
     message: "your ratings was recorded",
   });
@@ -40,8 +41,6 @@ exports.getratingsDetails = async (req, res) => {
   let details = await Ratings.find()
     .populate("book", "title , image , isbn")
     .populate("user", "fullname , email");
-
-  console.log(details.ratings);
 
   if (!details) {
     res.status(400).json({
@@ -54,6 +53,20 @@ exports.getratingsDetails = async (req, res) => {
     details,
   });
 };
+
+exports.getSingle = async(req,res)=>{
+  let books = await Ratings.find({book:req.params.bookId}).populate("book", "title , image , isbn")
+  if (!books) {
+    res.status(400).json({
+      success: false,
+      error: "Something went wrong",
+    });
+  }
+  return res.status(200).send({
+    success: true,
+    books,
+  });
+}
 
 exports.recommendedBooks = async (req, res) => {
   const data = await Ratings.find().populate(
@@ -98,6 +111,9 @@ exports.recommendedBooks = async (req, res) => {
   // generate recommendations for a given user
   const recommend = (user) => {
     const userRatings = matrix[user];
+    if (!userRatings) {
+      return []; // or handle the case when userRatings is not available
+    }
     const bookScores = {};
     Object.keys(userRatings).forEach((book1) => {
       Object.keys(bookSimilarities[book1]).forEach((book2) => {
@@ -111,6 +127,11 @@ exports.recommendedBooks = async (req, res) => {
       (a, b) => bookScores[b] - bookScores[a]
     );
 
+    // const recommendations = Object.keys(bookScores)
+    // .filter((book) => userRatings[book] === undefined && userRatings[book] > 4)
+    // .sort((a, b) => bookScores[b] - bookScores[a]);
+  
+
     // console.log(recommendations)
     const idRegex = /_id:\s*new\s+ObjectId\("(\w+)"\)/;
     const titleRegex = /title:\s*'([^']*)'/;
@@ -121,7 +142,7 @@ exports.recommendedBooks = async (req, res) => {
 
     let newRecommendations = [];
     recommendations.forEach((book) => {
-      const idMatch = book.match(idRegex)
+      const idMatch = book.match(idRegex);
       const titleMatch = book.match(titleRegex);
       const descMatch = book.match(descRegex);
       const isbnMatch = book.match(isbnRegex);
@@ -134,7 +155,7 @@ exports.recommendedBooks = async (req, res) => {
         const isbn = isbnMatch[1];
         const stock = stockMatch[1];
         const image = imageMatch[1];
-        const _id = idMatch[1]
+        const _id = idMatch[1];
         newRecommendations.push({ _id, title, desc, isbn, stock, image });
       }
     });
@@ -287,13 +308,19 @@ exports.browse = async (req, res) => {
   binarySearch(books, req.params.name);
 };
 
-
-exports.listBooks = async(req,res)=>{
-  let single_book = await Books.findById(req.params.id)
-  let limit = req.query.limit ? parseInt(req.params.limit) : 6
-  let book = await Books.find({_id:{$ne:single_book}, category:single_book.category}).limit(limit).populate("category", "category_name")
-  if(!book){
-    return res.status(400).json({ success:false, error: "something went wrong" });
+exports.listBooks = async (req, res) => {
+  let single_book = await Books.findById(req.params.id);
+  let limit = req.query.limit ? parseInt(req.params.limit) : 6;
+  let book = await Books.find({
+    _id: { $ne: single_book },
+    category: single_book.category,
+  })
+    .limit(limit)
+    .populate("category", "category_name");
+  if (!book) {
+    return res
+      .status(400)
+      .json({ success: false, error: "something went wrong" });
   }
-  return res.status(200).json({success:true , book})
-}
+  return res.status(200).json({ success: true, book });
+};

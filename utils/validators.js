@@ -90,7 +90,7 @@ exports.readersValidation = [
 
 
 // Login Validation
-exports.lofinValidation=[
+exports.loginValidation=[
   check("email", "Please enter your email")
     .notEmpty()
     .isEmail()
