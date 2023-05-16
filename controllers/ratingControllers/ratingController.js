@@ -54,8 +54,11 @@ exports.getratingsDetails = async (req, res) => {
   });
 };
 
-exports.getSingle = async(req,res)=>{
-  let books = await Ratings.find({book:req.params.bookId}).populate("book", "title , image , isbn")
+exports.getSingle = async (req, res) => {
+  let books = await Ratings.find({ book: req.params.bookId }).populate(
+    "book",
+    "title , image , isbn"
+  );
   if (!books) {
     res.status(400).json({
       success: false,
@@ -66,7 +69,7 @@ exports.getSingle = async(req,res)=>{
     success: true,
     books,
   });
-}
+};
 
 exports.recommendedBooks = async (req, res) => {
   const data = await Ratings.find().populate(
@@ -130,7 +133,6 @@ exports.recommendedBooks = async (req, res) => {
     // const recommendations = Object.keys(bookScores)
     // .filter((book) => userRatings[book] === undefined && userRatings[book] > 4)
     // .sort((a, b) => bookScores[b] - bookScores[a]);
-  
 
     // console.log(recommendations)
     const idRegex = /_id:\s*new\s+ObjectId\("(\w+)"\)/;
@@ -201,7 +203,6 @@ exports.recommendByCategory = async (req, res) => {
   const seen = new Set();
 
   userInput.forEach((input) => {
-    // recommendedBooks.length = 0;
     const classification = classifier.classify(input);
 
     const relatedBooks = books.filter(
@@ -210,17 +211,12 @@ exports.recommendByCategory = async (req, res) => {
     // const relatedBooks = data.filter((book) => book.category=== classification)
 
     if (relatedBooks.length > 0) {
-      console.log(`Here are some ${classification} books you might like:`);
       relatedBooks.forEach((book) => {
         if (!seen.has(book._id)) {
           seen.add(book._id);
           recommendedBooks.push(book);
         }
       });
-    } else {
-      console.log(
-        "Sorry, we don't have any recommendations for that category."
-      );
     }
   });
 

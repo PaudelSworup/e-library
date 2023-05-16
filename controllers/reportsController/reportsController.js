@@ -178,13 +178,19 @@ exports.rejectRequest = async (req, res) => {
       });
     }
 
+
+    let readers = await Readers.findOne({_id:req.params.id})
+
     let bookName = await Books.findOne({ _id: status.books_id });
     sendEmail({
       from: "KCTLIBRARY 📧 <kct.edu.gmail.com",
-      to: user.email,
-      subject: "approved request",
-      text: `hello ${user.fullname},\n Sorry, Your Request for ${bookName.title} has been rejected for some reason.\n Visit Library to know the cause`,
+      to: readers.email,
+      subject: "Rejected Request",
+      text: `hello ${readers.fullname},\n Sorry, Your Request for ${bookName.title} has been rejected for some reason.\n Visit Library to know the cause`,
     });
+
+    bookName.stock = bookName.stock+1;
+    bookName = await bookName.save();
     return res.status(400).json({
       success: true,
       message: "Your request has been Rejected",
