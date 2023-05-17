@@ -46,8 +46,7 @@ exports.issueRequest = async (req, res) => {
       success: false,
       error: "Book is not in the stock right now",
     });
-  } 
-  else {
+  } else {
     books.stock = books.stock - 1;
   }
 
@@ -124,7 +123,6 @@ exports.approveRequest = async (req, res) => {
   let user = await Readers.findOne({
     _id: req.params.id,
   });
-  
 
   if (approve) {
     if (approve.issueStatus == 0) {
@@ -168,6 +166,7 @@ exports.rejectRequest = async (req, res) => {
   if (status) {
     if (status.issueStatus == 0) {
       status.issueStatus = 2;
+      status.returnStatus = 2;
     }
     status = await status.save();
 
@@ -178,8 +177,7 @@ exports.rejectRequest = async (req, res) => {
       });
     }
 
-
-    let readers = await Readers.findOne({_id:req.params.id})
+    let readers = await Readers.findOne({ _id: req.params.id });
 
     let bookName = await Books.findOne({ _id: status.books_id });
     sendEmail({
@@ -189,7 +187,7 @@ exports.rejectRequest = async (req, res) => {
       text: `hello ${readers.fullname},\n Sorry, Your Request for ${bookName.title} has been rejected for some reason.\n Visit Library to know the cause`,
     });
 
-    bookName.stock = bookName.stock+1;
+    bookName.stock = bookName.stock + 1;
     bookName = await bookName.save();
     return res.status(200).json({
       success: true,
@@ -200,37 +198,33 @@ exports.rejectRequest = async (req, res) => {
 
 // return books
 exports.returnBooks = async (req, res) => {
-  let returnedBooks = await Reports.findOne({
+  let returnedBooks = await Reports.find({
     user_id: req.body.user_id,
     books_id: req.body.books_id,
   });
 
-  // console.log(returnedBooks)
+  let returnBookList = returnedBooks.filter((data) => {
+    return data.issueStatus == 1 && data.returnStatus == 0;
+  });
 
-  if(returnedBooks.issueStatus == 2){
-    return res.status(203).json({
-      success:false,
-      error:"Your request was rejected"
-    })
-  }
-
-  let book = await Books.findOne({_id:returnedBooks.books_id})
-
-  if (returnedBooks.issueStatus == 1) {
-    if (returnedBooks.returnStatus == 0) {
-      returnedBooks.userReturnedDate = Date.now();
-      returnedBooks = await returnedBooks.save();
-      if (returnedBooks.returnDate < returnedBooks.userReturnedDate) {
+  let book = await Books.findOne({ _id: req.body.books_id });
+  returnBookList.map(async (data) => {
+    if (data.issueStatus == 1 && data.returnStatus == 0) {
+      data.userReturnedDate = Date.now();
+      data = await data.save();
+      if (data.returnDate < data.userReturnedDate) { 
         let fine =
           (returnedBooks.userReturnedDate.getDate() -
             returnedBooks.returnDate.getDate()) *
           10;
-        returnedBooks.penalty = fine;
-        returnedBooks.returnStatus = 1;
-        book.stock = book.stock+1;
-        returnedBooks = await returnedBooks.save();
+
+        data.penalty = fine;
+        data.returnStatus = 1;
+
+        book.stock = book.stock + 1;
+        data = await data.save();
         book = await book.save();
-        if (!returnedBooks) {
+        if (!data) {
           return res.status(400).json({
             success: false,
             error: "Something went wrong",
@@ -241,28 +235,21 @@ exports.returnBooks = async (req, res) => {
             message: `Books returned with fine of Rs.${fine}`,
           });
         }
-      } else {
-        returnedBooks.returnStatus = 1;
-        book.stock = book.stock+1;
-        returnedBooks = await returnedBooks.save();
-        book = await book.save();
-        return res.status(200).json({
-          success: true,
-          message: `Books returned`,
-        });
       }
-    } else {
-      return res.status(400).json({
+      data.returnStatus = 1;
+      book.stock = book.stock + 1;
+      data = await data.save();
+      book = await book.save();
+      return res.status(200).json({
         success: true,
-        error: `Books has been already returned`,
+        message: `Books returned`,
       });
     }
-  } else {
     return res.status(400).json({
       success: true,
-      error: `Your request is not approved`,
+      error: `Books has been already returned`,
     });
-  }
+  });
 };
 
 exports.getHistory = async (req, res) => {
@@ -273,7 +260,7 @@ exports.getHistory = async (req, res) => {
     .populate("user_id", "fullname");
 
   const filterData = history.filter((data) => {
-    return (data.issueStatus == 1 || data.issueStatus == 2);
+    return data.issueStatus == 1 || data.issueStatus == 2;
   });
 
   console.log(filterData);
@@ -291,17 +278,10 @@ exports.getHistory = async (req, res) => {
   });
 };
 
-
 // exports.getMostRequested = async(req,res)=>{
 
 //   let result= await Reports.aggregate([
 //     {$group:{_id:"$penalty", wholedoc:{$push:"$$ROOT"}}}
 //   ])
 
-  
-
-    
-
 // }
-
-
