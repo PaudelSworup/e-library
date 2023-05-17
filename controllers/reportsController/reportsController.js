@@ -191,7 +191,7 @@ exports.rejectRequest = async (req, res) => {
 
     bookName.stock = bookName.stock+1;
     bookName = await bookName.save();
-    return res.status(400).json({
+    return res.status(200).json({
       success: true,
       message: "Your request has been Rejected",
     });
