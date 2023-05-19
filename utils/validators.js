@@ -5,6 +5,7 @@ const User = require("../models/reader/readerModel");
 const Ratings = require("../models/ratings/ratingModel")
 
 
+
 // books validation
 exports.booksValidation = [
   check("title", "Please enter Book name")
@@ -104,6 +105,9 @@ exports.issueRequestValidation = [
   check("user_id", "user id is required").notEmpty(),
   // check("isssueDate", "please choose todays date").notEmpty()
 ];
+
+
+
 
 
 

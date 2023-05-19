@@ -181,7 +181,7 @@ exports.rejectRequest = async (req, res) => {
 
     let bookName = await Books.findOne({ _id: status.books_id });
     sendEmail({
-      from: "KCTLIBRARY 📧 <kct.edu.gmail.com",
+      from: "KCTLIBRARY 📧 <kct.edu@gmail.com",
       to: readers.email,
       subject: "Rejected Request",
       text: `hello ${readers.fullname},\n Sorry, Your Request for ${bookName.title} has been rejected for some reason.\n Visit Library to know the cause`,

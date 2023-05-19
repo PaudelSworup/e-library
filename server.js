@@ -15,6 +15,7 @@ const bookRoute = require("./routes/booksRoute/BooksRoute")
 const userRoute = require("./routes/userRoutes/userRoute")
 const requestRoute = require("./routes/reportsRoute/reportRoute")
 const ratingRoute = require("./routes/ratingsRoute/ratingRoute")
+const profileRoute = require("./routes/profileRoute/profileRoutes")
 
 
 
@@ -24,6 +25,7 @@ const ratingRoute = require("./routes/ratingsRoute/ratingRoute")
 app.use(bodyParser.json())
 app.use(morgan("dev"))
 app.use("/public/uploads", express.static("public/uploads"));
+app.use("/public/profile", express.static("public/profile"))
 app.use(cookieParser())
 app.use(cors())
 
@@ -33,6 +35,7 @@ app.use("/api",bookRoute)
 app.use("/api" , userRoute)
 app.use("/api", requestRoute)
 app.use("/api" , ratingRoute)
+app.use("/api" , profileRoute)
 
 
 
