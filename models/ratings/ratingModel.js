@@ -20,7 +20,8 @@ const ratingSchema = new mongoose.Schema({
         type:ObjectId,
         required:true,
         ref:"Readers"
-    }
+    },
+
 })
 
 
