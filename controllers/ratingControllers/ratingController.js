@@ -137,7 +137,7 @@ exports.getSingle = async (req, res) => {
 exports.recommendedBooks = async (req, res) => {
   const data = await Ratings.find().populate(
     "book",
-    "title image isbn desc stock"
+    "title image isbn desc stock yearofpublication"
   );
 
   if (data.length <= 2) {
@@ -202,6 +202,9 @@ exports.recommendedBooks = async (req, res) => {
       (a, b) => bookScores[b] - bookScores[a]
     );
 
+
+      
+
     // const recommendations = Object.keys(bookScores)
     // .filter((book) => userRatings[book] === undefined && userRatings[book] > 4)
     // .sort((a, b) => bookScores[b] - bookScores[a]);
@@ -213,6 +216,7 @@ exports.recommendedBooks = async (req, res) => {
     const isbnRegex = /isbn:\s*(\d+)/;
     const stockRegex = /stock:\s*(\d+)/;
     const imageRegex = /image:\s*'([^']*)'/;
+    const yopRegex = /yearofpublication: ([\d-]+T[\d:.]+Z)/;;
 
     let newRecommendations = [];
     recommendations.forEach((book) => {
@@ -222,6 +226,7 @@ exports.recommendedBooks = async (req, res) => {
       const isbnMatch = book.match(isbnRegex);
       const stockMatch = book.match(stockRegex);
       const imageMatch = book.match(imageRegex);
+      const yearMatch = book.match(yopRegex)
 
       if (titleMatch && descMatch) {
         const title = titleMatch[1];
@@ -230,7 +235,8 @@ exports.recommendedBooks = async (req, res) => {
         const stock = stockMatch[1];
         const image = imageMatch[1];
         const _id = idMatch[1];
-        newRecommendations.push({ _id, title, desc, isbn, stock, image });
+        const yearofpublication = yearMatch[1]
+        newRecommendations.push({ _id, title, desc, isbn, stock, image, yearofpublication });
       }
     });
 
