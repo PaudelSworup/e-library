@@ -2,7 +2,7 @@ const { check, validationResult } = require("express-validator");
 
 const Books = require("../models/books/booksModel");
 const User = require("../models/reader/readerModel");
-const Ratings = require("../models/ratings/ratingModel")
+// const Ratings = require("../models/ratings/ratingModel")
 
 
 
@@ -61,7 +61,7 @@ exports.readersValidation = [
     .custom((val) => {
       return User.findOne({ email: val }).then((user) => {
         if (user) {
-          return Promise.reject("Anothr user with same email already exist");
+          return Promise.reject("Another user with same email already exist");
         }
       });
     }),
@@ -70,7 +70,11 @@ exports.readersValidation = [
     .withMessage("enter the specfied address"),
   check("mobilenum", "please enter your mobile number")
     .isLength({ max: 10, min: 10 })
-    .withMessage("enter 10 digits number"),
+    .withMessage("enter 10 digits number").custom((val)=>{
+      return User.findOne({mobilenum:val}).then((user)=>{
+        return Promise.reject("Another user with same mobile number already exist");
+      })
+    }),
 
   check("password", "password is required")
     .notEmpty()
