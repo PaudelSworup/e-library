@@ -2,9 +2,6 @@ const { check, validationResult } = require("express-validator");
 
 const Books = require("../models/books/booksModel");
 const User = require("../models/reader/readerModel");
-// const Ratings = require("../models/ratings/ratingModel")
-
-
 
 // books validation
 exports.booksValidation = [
@@ -30,8 +27,8 @@ exports.booksValidation = [
         }
       });
     }),
-    check("stock" , "Enter the stock quantity").notEmpty(),
-    check("desc", "please enter some book description").notEmpty(),
+  check("stock", "Enter the stock quantity").notEmpty(),
+  check("desc", "please enter some book description").notEmpty(),
   check("price", "please enter book price").notEmpty(),
   check("publisher", "please enter publisher name").notEmpty(),
   check("category", "please choose books category").notEmpty(),
@@ -41,17 +38,7 @@ exports.booksValidation = [
   ).notEmpty(),
 ];
 
-// ratings validation
-// exports.ratingsValidation = [
-//   check("book", "please enter your book name").notEmpty().custom((val)=>{
-//     return Ratings.findOne({user:val , book:val}).then((rate)=>{
-//       if(rate){
-//         return Promise.reject("Review/Ratings has been recorded previously");
-//       }
-//     })
-//   })
-// ]
-// registerUserValidation or readers
+// user validation
 exports.readersValidation = [
   check("fullname", "Please enter your fullname").notEmpty(),
   check("email", "Please enter your email")
@@ -70,10 +57,15 @@ exports.readersValidation = [
     .withMessage("enter the specfied address"),
   check("mobilenum", "please enter your mobile number")
     .isLength({ max: 10, min: 10 })
-    .withMessage("enter 10 digits number").custom((val)=>{
-      return User.findOne({mobilenum:val}).then((user)=>{
-        return Promise.reject("Another user with same mobile number already exist");
-      })
+    .withMessage("enter 10 digits number")
+    .custom((val) => {
+      return User.findOne({ mobilenum: val }).then((user) => {
+        if (user) {
+          return Promise.reject(
+            "Another user with same mobile number already exist"
+          );
+        }
+      });
     }),
 
   check("password", "password is required")
@@ -90,30 +82,24 @@ exports.readersValidation = [
     .withMessage("password must be atleast 8 character")
     .isLength({ max: 50 })
     .withMessage("password can't be more than 50 character"),
-    check("choosedCatgoeirs", "please choose the categories").notEmpty()
+  check("choosedCatgoeirs", "please choose the categories").notEmpty(),
 ];
 
-
 // Login Validation
-exports.loginValidation=[
+exports.loginValidation = [
   check("email", "Please enter your email")
     .notEmpty()
     .isEmail()
     .withMessage("Invalid email format"),
-    check("password", "password is required")
-    .notEmpty()
-]
+  check("password", "password is required").notEmpty(),
+];
+
 // book issue request
 exports.issueRequestValidation = [
-  check("books_id","Books has not been selected").notEmpty(),
+  check("books_id", "Books has not been selected").notEmpty(),
   check("user_id", "user id is required").notEmpty(),
   // check("isssueDate", "please choose todays date").notEmpty()
 ];
-
-
-
-
-
 
 exports.validators = (req, res, next) => {
   const error = validationResult(req);
