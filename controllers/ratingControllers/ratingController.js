@@ -4,6 +4,8 @@ const Readers = require("../../models/reader/readerModel");
 const natural = require("natural");
 
 exports.provideRating = async (req, res) => {
+  console.log(req.body.book);
+  console.log(req.body.user);
   let alreadyRated = await Ratings.findOne({
     book: req.body.book,
     user: req.body.user,
@@ -15,68 +17,6 @@ exports.provideRating = async (req, res) => {
       error: "Review/Ratings has been recorded previously",
     });
   }
-
-  const books = await Books.find().populate("category", "category_name");
-
-  const userRatings = await Ratings.find();
-
-  // Calculate Euclidean distance between two users
-  function calculateDistance(userA, userB) {
-    return Math.sqrt(Math.pow(userA.rating - userB.rating, 2));
-  }
-
-  // Find k nearest neighbors to the target user
-  function findNearestNeighbors(targetUser, users, k) {
-    const distances = [];
-    for (const user of users) {
-      const distance = calculateDistance(targetUser, user);
-      distances.push({ user, distance });
-    }
-    distances.sort((a, b) => a.distance - b.distance);
-    return distances.slice(0, k).map((item) => item.user);
-  }
-
-  // Generate book recommendations based on nearest neighbors
-  function generateRecommendations(neighbors) {
-    const bookRecommendations = [];
-
-    for (const book of books) {
-      let totalRating = 0;
-      let count = 0;
-
-      for (const neighbor of neighbors) {
-        const rating = userRatings.find(
-          (rating) =>
-            rating.user.toString() === neighbor.user.toString() &&
-            rating.book.toString() === book._id.toString()
-        );
-        if (rating) {
-          totalRating += rating.rating;
-          count++;
-        }
-      }
-
-      if (count > 0) {
-        const averageRating = totalRating / count;
-        bookRecommendations.push({ book, averageRating });
-      }
-    }
-
-    bookRecommendations.sort((a, b) => b.averageRating - a.averageRating);
-
-    return bookRecommendations;
-  }
-
-  // Example usage
-  const targetUser = {
-    user: req.body.user,
-    _id: req.body.book,
-    rating: Number(req.body.rating),
-  };
-  const k = 3;
-  const nearestNeighbors = findNearestNeighbors(targetUser, userRatings, k);
-  const recommendations = generateRecommendations(nearestNeighbors);
-
   let bookRating = new Ratings({
     rating: Number(req.body.rating),
     book: req.body.book,
@@ -96,7 +36,6 @@ exports.provideRating = async (req, res) => {
   return res.status(200).send({
     success: true,
     message: "your ratings was recorded",
-    recommendations,
   });
 };
 
@@ -202,21 +141,13 @@ exports.recommendedBooks = async (req, res) => {
       (a, b) => bookScores[b] - bookScores[a]
     );
 
-
-      
-
-    // const recommendations = Object.keys(bookScores)
-    // .filter((book) => userRatings[book] === undefined && userRatings[book] > 4)
-    // .sort((a, b) => bookScores[b] - bookScores[a]);
-
-    // console.log(recommendations)
     const idRegex = /_id:\s*new\s+ObjectId\("(\w+)"\)/;
     const titleRegex = /title:\s*'([^']*)'/;
     const descRegex = /desc:\s*'([^']*)'/;
     const isbnRegex = /isbn:\s*(\d+)/;
     const stockRegex = /stock:\s*(\d+)/;
     const imageRegex = /image:\s*'([^']*)'/;
-    const yopRegex = /yearofpublication: ([\d-]+T[\d:.]+Z)/;;
+    const yopRegex = /yearofpublication: ([\d-]+T[\d:.]+Z)/;
 
     let newRecommendations = [];
     recommendations.forEach((book) => {
@@ -226,7 +157,7 @@ exports.recommendedBooks = async (req, res) => {
       const isbnMatch = book.match(isbnRegex);
       const stockMatch = book.match(stockRegex);
       const imageMatch = book.match(imageRegex);
-      const yearMatch = book.match(yopRegex)
+      const yearMatch = book.match(yopRegex);
 
       if (titleMatch && descMatch) {
         const title = titleMatch[1];
@@ -235,8 +166,16 @@ exports.recommendedBooks = async (req, res) => {
         const stock = stockMatch[1];
         const image = imageMatch[1];
         const _id = idMatch[1];
-        const yearofpublication = yearMatch[1]
-        newRecommendations.push({ _id, title, desc, isbn, stock, image, yearofpublication });
+        const yearofpublication = yearMatch[1];
+        newRecommendations.push({
+          _id,
+          title,
+          desc,
+          isbn,
+          stock,
+          image,
+          yearofpublication,
+        });
       }
     });
 
@@ -379,3 +318,76 @@ exports.listBooks = async (req, res) => {
   return res.status(200).json({ success: true, book });
 };
 
+exports.getKnn = async (req, res) => {
+  console.log(req.params.userid);
+  console.log(req.params.bookid);
+  const books = await Books.find().populate("category", "category_name");
+
+  const userRatings = await Ratings.find();
+
+  const getSingleRatings = await Ratings.findOne({
+    book: req.params.bookid,
+    user: req.params.userid,
+  });
+
+  // Calculate Euclidean distance between two users
+  function calculateDistance(userA, userB) {
+    return Math.sqrt(Math.pow(userA.rating - userB.rating, 2));
+  }
+
+  // Find k nearest neighbors to the target user
+  function findNearestNeighbors(targetUser, users, k) {
+    const distances = [];
+    for (const user of users) {
+      const distance = calculateDistance(targetUser, user);
+      distances.push({ user, distance });
+    }
+    distances.sort((a, b) => a.distance - b.distance);
+    return distances.slice(0, k).map((item) => item.user);
+  }
+
+  // Generate book recommendations based on nearest neighbors
+  function generateRecommendations(neighbors) {
+    const bookRecommendations = [];
+
+    for (const book of books) {
+      let totalRating = 0;
+      let count = 0;
+
+      for (const neighbor of neighbors) {
+        const rating = userRatings.find(
+          (rating) =>
+            rating.user.toString() === neighbor.user.toString() &&
+            rating.book.toString() === book._id.toString()
+        );
+        if (rating) {
+          totalRating += rating.rating;
+          count++;
+        }
+      }
+
+      if (count > 0) {
+        const averageRating = totalRating / count;
+        bookRecommendations.push({ book, averageRating });
+      }
+    }
+
+    bookRecommendations.sort((a, b) => b.averageRating - a.averageRating);
+
+    return bookRecommendations;
+  }
+
+  // Example usage
+
+  if (getSingleRatings) {
+    const targetUser = {
+      user: req.params.userid,
+      _id: req.params.bookid,
+      rating: getSingleRatings.rating,
+    };
+    const k = 3;
+    const nearestNeighbors = findNearestNeighbors(targetUser, userRatings, k);
+    const recommendations = generateRecommendations(nearestNeighbors);
+    return res.status(200).send({ success: true, recommendations });
+  }
+};
