@@ -127,6 +127,7 @@ exports.approveRequest = async (req, res) => {
   if (approve) {
     if (approve.issueStatus == 0) {
       approve.issueStatus = 1;
+      approve.approvedDate = Date.now()
       approve.returnDate = addDays(Date.now(), 10);
     }
     approve = await approve.save();
@@ -256,14 +257,12 @@ exports.getHistory = async (req, res) => {
   let history = await Reports.find()
     .select("-createdAt")
     .select("-updatedAt")
-    .populate("books_id", "title")
+    .populate("books_id", "title , image")
     .populate("user_id", "fullname");
 
   const filterData = history.filter((data) => {
-    return data.issueStatus == 1 || data.issueStatus == 2;
+    return data.issueStatus == 1 || data.issueStatus == 2 || data.issueStatus == 0;
   });
-
-  console.log(filterData);
 
   if (!filterData) {
     return res.status(400).json({
@@ -278,10 +277,75 @@ exports.getHistory = async (req, res) => {
   });
 };
 
-// exports.getMostRequested = async(req,res)=>{
 
-//   let result= await Reports.aggregate([
-//     {$group:{_id:"$penalty", wholedoc:{$push:"$$ROOT"}}}
-//   ])
+// exports.getMostRequested = async (req, res) => {
+//   try {
+//     const reports = await Reports.find();
+    
+//     // Count the requests for each book
+//     const requestCounts = new Map();
+//     for (const report of reports) {
+//       const bookId = report.books_id._id.toString();
+//       const count = requestCounts.get(bookId) || 0;
+//       requestCounts.set(bookId, count + 1);
+//     }
+    
+//     // Find the book with the maximum request count
+//     let mostRequestedBookId;
+//     let maxRequestCount = 0;
+//     for (const [bookId, count] of requestCounts) {
+//       if (count > maxRequestCount) {
+//         mostRequestedBookId = bookId;
+//         maxRequestCount = count;
+//       }
+//     }
+    
+//     // Retrieve the book details of the most requested book
+//     const mostRequestedBook = await Books.findById(mostRequestedBookId);
+    
+//     res.json({ mostRequestedBook });
+//   } catch (error) {
+//     res.status(500).json({ error: 'Failed to get the most requested book.' });
+//   }
+// };
 
-// }
+exports.getMostRequested = async (req, res) => {
+  try {
+    const reports = await Reports.find();
+    
+    // Count the requests for each book
+    const requestCounts = new Map();
+    for (const report of reports) {
+      const bookId = report.books_id._id.toString();
+      const count = requestCounts.get(bookId) || 0;
+      requestCounts.set(bookId, count + 1);
+    }
+    
+    // Find the maximum request count
+    let maxRequestCount = 0;
+    for (const count of requestCounts.values()) {
+      if (count > maxRequestCount) {
+        maxRequestCount = count;
+      }
+    }
+    
+    // Find the books with the maximum request count
+    const mostRequestedBookIds = [];
+    for (const [bookId, count] of requestCounts) {
+      if (count === maxRequestCount) {
+        mostRequestedBookIds.push(bookId);
+      }
+    }
+    
+    // Retrieve the book details of the most requested books
+    const mostRequestedBooks = await Books.find({ _id: { $in: mostRequestedBookIds } });
+    
+    res.json({ mostRequestedBooks });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get the most requested books.' });
+  }
+};
+
+
+
+

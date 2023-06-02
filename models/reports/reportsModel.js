@@ -23,6 +23,11 @@ const reportsSchema = new mongoose.Schema({
     default: 0,
   },
 
+  approvedDate:{
+    type:Date,
+    default: Date.now(),
+  },
+
   returnDate: {
     type: Date,
     default: Date.now(),

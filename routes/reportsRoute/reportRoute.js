@@ -10,7 +10,7 @@ router.post("/approve/:id", approveRequest)
 router.post("/reject/:id", rejectRequest)
 router.get("/reports/:id", getUserRequest)
 router.get("/history" , getHistory)
-// router.get("/mostrequested", getMostRequested )
+router.get("/mostrequested", getMostRequested )
 // router.post("/cbf",contentBasedFiltering)
 // router.get("/reports/isbn" , getBookByIsbn)
 
