@@ -278,36 +278,7 @@ exports.getHistory = async (req, res) => {
 };
 
 
-// exports.getMostRequested = async (req, res) => {
-//   try {
-//     const reports = await Reports.find();
-    
-//     // Count the requests for each book
-//     const requestCounts = new Map();
-//     for (const report of reports) {
-//       const bookId = report.books_id._id.toString();
-//       const count = requestCounts.get(bookId) || 0;
-//       requestCounts.set(bookId, count + 1);
-//     }
-    
-//     // Find the book with the maximum request count
-//     let mostRequestedBookId;
-//     let maxRequestCount = 0;
-//     for (const [bookId, count] of requestCounts) {
-//       if (count > maxRequestCount) {
-//         mostRequestedBookId = bookId;
-//         maxRequestCount = count;
-//       }
-//     }
-    
-//     // Retrieve the book details of the most requested book
-//     const mostRequestedBook = await Books.findById(mostRequestedBookId);
-    
-//     res.json({ mostRequestedBook });
-//   } catch (error) {
-//     res.status(500).json({ error: 'Failed to get the most requested book.' });
-//   }
-// };
+
 
 exports.getMostRequested = async (req, res) => {
   try {
@@ -321,28 +292,18 @@ exports.getMostRequested = async (req, res) => {
       requestCounts.set(bookId, count + 1);
     }
     
-    // Find the maximum request count
-    let maxRequestCount = 0;
-    for (const count of requestCounts.values()) {
-      if (count > maxRequestCount) {
-        maxRequestCount = count;
-      }
-    }
-    
-    // Find the books with the maximum request count
-    const mostRequestedBookIds = [];
+    // Find the books with the request count of 2 or more
+    const mostRequestedBooks = [];
     for (const [bookId, count] of requestCounts) {
-      if (count === maxRequestCount) {
-        mostRequestedBookIds.push(bookId);
+      if (count >= 2) {
+        const book = await Books.findById(bookId);
+        mostRequestedBooks.push(book);
       }
     }
     
-    // Retrieve the book details of the most requested books
-    const mostRequestedBooks = await Books.find({ _id: { $in: mostRequestedBookIds } });
-    
-    res.json({ mostRequestedBooks });
+    return res.status(200).send({success:true , mostRequestedBooks})
   } catch (error) {
-    res.status(500).json({ error: 'Failed to get the most requested books.' });
+    return res.status(500).json({ success:false, error: 'Failed to get the most requested books.' });
   }
 };
 
