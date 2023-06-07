@@ -3,6 +3,7 @@ const Readers = require("../../models/reader/readerModel");
 const { addDays } = require("date-fns");
 const Books = require("../../models/books/booksModel");
 const sendEmail = require("../../utils/sendMail");
+const schedule = require('node-schedule');
 
 // to issue request
 exports.issueRequest = async (req, res) => {
@@ -306,6 +307,21 @@ exports.getMostRequested = async (req, res) => {
     return res.status(500).json({ success:false, error: 'Failed to get the most requested books.' });
   }
 };
+
+
+
+
+exports.sendNotification = async(req,res) =>{
+  const startTime = new Date(Date.now() + 1000);
+const endTime = new Date(startTime.getTime() + 1000);
+const job = schedule.scheduleJob({ start: startTime, end: endTime, rule: '*/1 * * * * *' }, function(){
+   return  res.status(200).send({success:true , message:"Books return date is tomorrow"})
+});
+}
+
+
+
+
 
 
 
