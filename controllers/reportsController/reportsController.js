@@ -3,7 +3,7 @@ const Readers = require("../../models/reader/readerModel");
 const { addDays } = require("date-fns");
 const Books = require("../../models/books/booksModel");
 const sendEmail = require("../../utils/sendMail");
-const schedule = require('node-schedule');
+const schedule = require("node-schedule");
 
 // to issue request
 exports.issueRequest = async (req, res) => {
@@ -128,7 +128,7 @@ exports.approveRequest = async (req, res) => {
   if (approve) {
     if (approve.issueStatus == 0) {
       approve.issueStatus = 1;
-      approve.approvedDate = Date.now()
+      approve.approvedDate = Date.now();
       approve.returnDate = addDays(Date.now(), 10);
     }
     approve = await approve.save();
@@ -214,7 +214,7 @@ exports.returnBooks = async (req, res) => {
     if (data.issueStatus == 1 && data.returnStatus == 0) {
       data.userReturnedDate = Date.now();
       data = await data.save();
-      if (data.returnDate < data.userReturnedDate) { 
+      if (data.returnDate < data.userReturnedDate) {
         let fine =
           (returnedBooks.userReturnedDate.getDate() -
             returnedBooks.returnDate.getDate()) *
@@ -262,7 +262,9 @@ exports.getHistory = async (req, res) => {
     .populate("user_id", "fullname");
 
   const filterData = history.filter((data) => {
-    return data.issueStatus == 1 || data.issueStatus == 2 || data.issueStatus == 0;
+    return (
+      data.issueStatus == 1 || data.issueStatus == 2 || data.issueStatus == 0
+    );
   });
 
   if (!filterData) {
@@ -278,13 +280,10 @@ exports.getHistory = async (req, res) => {
   });
 };
 
-
-
-
 exports.getMostRequested = async (req, res) => {
   try {
     const reports = await Reports.find();
-    
+
     // Count the requests for each book
     const requestCounts = new Map();
     for (const report of reports) {
@@ -292,7 +291,7 @@ exports.getMostRequested = async (req, res) => {
       const count = requestCounts.get(bookId) || 0;
       requestCounts.set(bookId, count + 1);
     }
-    
+
     // Find the books with the request count of 2 or more
     const mostRequestedBooks = [];
     for (const [bookId, count] of requestCounts) {
@@ -301,28 +300,49 @@ exports.getMostRequested = async (req, res) => {
         mostRequestedBooks.push(book);
       }
     }
-    
-    return res.status(200).send({success:true , mostRequestedBooks})
+
+    return res.status(200).send({ success: true, mostRequestedBooks });
   } catch (error) {
-    return res.status(500).json({ success:false, error: 'Failed to get the most requested books.' });
+    return res.status(500).json({
+      success: false,
+      error: "Failed to get the most requested books.",
+    });
   }
 };
 
+exports.sendNotification = async (req, res) => {
+  console.log(req.params.id);
+  const dueDates = await Reports.find({
+    issueStatus: 1,
+    user_id: req.params.id,
+  })
+    .populate("user_id", "fullname email")
+    .populate("books_id", "title , image");
 
-
-
-exports.sendNotification = async(req,res) =>{
-  const startTime = new Date(Date.now() + 1000);
-const endTime = new Date(startTime.getTime() + 1000);
-const job = schedule.scheduleJob({ start: startTime, end: endTime, rule: '*/1 * * * * *' }, function(){
-   return  res.status(200).send({success:true , message:"Books return date is tomorrow"})
-});
-}
-
-
-
-
-
-
-
-
+  dueDates.map((data) => {
+    const hello = new Date(
+      data.returnDate - 24 * 60 * 60 * 1000
+    ).toLocaleString();
+    console.log(hello);
+    console.log(new Date(data.returnDate - 24 * 60 * 60 * 1000).toISOString());
+    // const startTime = new Date(data.returnDate - 24 * 60 * 60 * 1000);
+    const startTime = new Date(new Date() + 1000)
+    const endTime = new Date(startTime.getTime() + 1000);
+    const job = schedule.scheduleJob(
+      { start: startTime, end: endTime, rule: "*/1 * * * * *" },
+      function () {
+        return res.status(200).json({
+          success: true,
+          notification: 
+            {
+              message: `This is the reminder for you that your return date for ${data.books_id.title} is tomorrow`,
+              Date: Date.now(),
+              books_id: data.books_id,
+              user_id: req.params.id,
+            },
+          
+        });
+      }
+    );
+  });
+};

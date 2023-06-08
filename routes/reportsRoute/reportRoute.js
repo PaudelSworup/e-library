@@ -10,10 +10,8 @@ router.post("/approve/:id", approveRequest)
 router.post("/reject/:id", rejectRequest)
 router.get("/reports/:id", getUserRequest)
 router.get("/history" , getHistory)
-router.get("/notify", sendNotification)
+router.get("/notify/:id", sendNotification)
 router.get("/mostrequested", getMostRequested )
-// router.post("/cbf",contentBasedFiltering)
-// router.get("/reports/isbn" , getBookByIsbn)
 
 
 module.exports = router
