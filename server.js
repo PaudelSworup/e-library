@@ -17,6 +17,7 @@ const requestRoute = require("./routes/reportsRoute/reportRoute")
 const ratingRoute = require("./routes/ratingsRoute/ratingRoute")
 const profileRoute = require("./routes/profileRoute/profileRoutes")
 const likeRoute = require("./routes/likeRoute/likeRoute")
+const notificationRoute = require("./routes/notificationRoutes/notificationRoute")
 
 
 
@@ -38,6 +39,7 @@ app.use("/api", requestRoute)
 app.use("/api" , ratingRoute)
 app.use("/api" , profileRoute)
 app.use("/api" , likeRoute)
+app.use("/api" , notificationRoute)
 
 
 

@@ -4,6 +4,7 @@ const { addDays } = require("date-fns");
 const Books = require("../../models/books/booksModel");
 const sendEmail = require("../../utils/sendMail");
 const schedule = require("node-schedule");
+const Notification = require("../../models/notification/notificationModel");
 
 // to issue request
 exports.issueRequest = async (req, res) => {
@@ -146,10 +147,19 @@ exports.approveRequest = async (req, res) => {
       subject: "approved request",
       text: `hello ${user.fullname}, \n your request for ${bookName.title} has been approved`,
     });
-    return res.status(200).json({
-      success: true,
-      message: "Your request has been approved",
+
+    let notification = new Notification({
+      book: approve.books_id,
+      user: req.params.id,
+      returnDate:approve.returnDate
     });
+    notification = await notification.save();
+    if (notification) {
+      return res.status(200).json({
+        success: true,
+        message: "Your request has been approved",
+      });
+    }
   }
 
   return res.status(400).json({
@@ -319,30 +329,50 @@ exports.sendNotification = async (req, res) => {
     .populate("user_id", "fullname email")
     .populate("books_id", "title , image");
 
-  dueDates.map((data) => {
-    const hello = new Date(
-      data.returnDate - 24 * 60 * 60 * 1000
-    ).toLocaleString();
-    console.log(hello);
-    console.log(new Date(data.returnDate - 24 * 60 * 60 * 1000).toISOString());
-    // const startTime = new Date(data.returnDate - 24 * 60 * 60 * 1000);
-    const startTime = new Date(new Date() + 1000)
-    const endTime = new Date(startTime.getTime() + 1000);
-    const job = schedule.scheduleJob(
-      { start: startTime, end: endTime, rule: "*/1 * * * * *" },
-      function () {
-        return res.status(200).json({
-          success: true,
-          notification: 
-            {
-              message: `This is the reminder for you that your return date for ${data.books_id.title} is tomorrow`,
-              Date: Date.now(),
-              books_id: data.books_id,
-              user_id: req.params.id,
-            },
-          
-        });
+  const notification = [];
+  const jobPromises = []; // Array to store the job promises
+
+  const notificationPromise = new Promise((resolve) => {
+    dueDates.forEach((data) => {
+      console.log(new Date(data.returnDate).toISOString());
+      console.log(new Date(data.returnDate).toLocaleString());
+      const startTime = new Date(new Date() + 1000);
+      // const startTime = new Date(data.returnDate - 24 * 60 * 60 * 1000);
+      const endTime = new Date(startTime.getTime() + 1000);
+
+      const job = schedule.scheduleJob(
+        { start: startTime, end: endTime, rule: "*/1 * * * * *" },
+        function () {
+          let notificationData = {
+            message: `This is the reminder for you that your return date for ${data.books_id.title} is tomorrow`,
+            books_id: data.books_id,
+            user_id: req.params.id,
+            date: new Date(),
+          };
+
+          notification.push(notificationData);
+          console.log(notification);
+          // resolve()
+        }
+      );
+
+      if (job) {
+        jobPromises.push(
+          new Promise((resolve) => {
+            job.on("run", resolve);
+          })
+        );
       }
-    );
+    });
+
+    // Resolve the notificationPromise when all job promises are resolved
+    Promise.all(jobPromises).then(resolve);
+  });
+
+  await notificationPromise; // Wait for all notifications to be added
+
+  return res.status(200).json({
+    success: true,
+    notification,
   });
 };
