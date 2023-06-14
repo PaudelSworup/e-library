@@ -5,6 +5,6 @@ const {
 const router = express.Router();
 
 router.get("/notifications/:id", sendNotifications);
-router.put("/notifications" , updateStatus)
+router.put("/notifications/:id" , updateStatus)
 
 module.exports = router;

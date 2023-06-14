@@ -38,7 +38,7 @@ exports.postUser = async (req, res) => {
     });
   }
 
-  const emailVerificationUrl = `${process.env.CLIENTSIDE}confirmation/${token.token}`;
+  const emailVerificationUrl = `${process.env.FRONTEND}confirmation/${token.token}`;
   sendEmail({
     from: "KCTLIBRARY 📧 <kct.edu.gmail.com",
     to: reader.email,
@@ -137,7 +137,7 @@ exports.resendVerification = async (req, res) => {
       .json({ success: false, error: "Something went wrong" });
   }
 
-  const emailVerificationUrl = `${process.env.CLIENTSIDE}confirmation/${token.token}`;
+  const emailVerificationUrl = `${process.env.FRONTEND}confirmation/${token.token}`;
   sendEmail({
     from: "KCTLIBRARY 📧 <kct.edu.gmail.com",
     to: email.email,
@@ -254,7 +254,7 @@ exports.forgotPassword = async (req, res) => {
     });
   }
 
-  const resetPassword = `${process.env.CLIENTSIDE}api/resetpassword/${token.token}`;
+  const resetPassword = `${process.env.FRONTEND}api/resetpassword/${token.token}`;
   sendEmail({
     from: "KCTLIBRARY 📧 <kct.edu.gmail.com",
     to: email.email,

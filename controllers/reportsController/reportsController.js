@@ -151,7 +151,8 @@ exports.approveRequest = async (req, res) => {
     let notification = new Notification({
       book: approve.books_id,
       user: req.params.id,
-      returnDate:approve.returnDate
+      returnDate:approve.returnDate,
+      date:Date.now()
     });
     notification = await notification.save();
     if (notification) {
