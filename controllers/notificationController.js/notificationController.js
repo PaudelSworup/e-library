@@ -82,7 +82,8 @@ exports.sendNotifications = async (req, res) => {
 exports.updateStatus = async (req, res) => {
   let { newData } = req.body;
   try {
-    for (let { id, user_id  } of newData) {
+    for (let { id, user_id  , message  } of newData) {
+      console.log(message)
       let notification = await Notification.findOne({
         book: id, 
         user: user_id,
@@ -90,15 +91,13 @@ exports.updateStatus = async (req, res) => {
 
       if (notification) {
         notification.notificationStatus = 1;
+        notification.messageNotification = message
         notification = await notification.save();
       }
     }
 
     let notification = await Notification.find({user:req.params.id}).populate("user", "fullname email")
     .populate("book", "title image");
-
-    console.log(notification)
-
     return res.status(200).send({success:true , notification})
   } catch (err) {
     console.log(err);
