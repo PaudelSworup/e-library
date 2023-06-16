@@ -6,32 +6,6 @@ exports.sendNotifications = async (req, res) => {
     .populate("user", "fullname email")
     .populate("book", "title image");
 
-  // const watchedNotification = await Notification.find({})
-
-  //   notificationsData.forEach((data) => {
-  //     const startTime = new Date(new Date() + 1000);
-  //     // const startTime = new Date(data.returnDate - 24 * 60 * 60 * 1000);
-  //     const endTime = new Date(startTime.getTime() + 1000);
-
-  //     const job = schedule.scheduleJob(
-  //       { start: startTime, end: endTime, rule: "*/1 * * * * *" },
-  //       function () {
-  //         let notificationData = {
-  //           message: `This is the reminder for you that your return date for ${data.book.title} is tomorrow`,
-  //           books_id: data.book,
-  //           user_id: req.params.id,
-  //           date: new Date(),
-  //           status:data.notificationStatus
-  //         };
-
-  //         return res.status(200).json({
-  //           success: true,
-  //           notificationData,
-  //         });
-  //       }
-  //     );
-  //   });
-
   const notification = [];
   const jobPromises = []; // Array to store the job promises
 
@@ -82,23 +56,24 @@ exports.sendNotifications = async (req, res) => {
 exports.updateStatus = async (req, res) => {
   let { newData } = req.body;
   try {
-    for (let { id, user_id  , message  } of newData) {
-      console.log(message)
+    for (let { id, user_id, message } of newData) {
+      console.log(message);
       let notification = await Notification.findOne({
-        book: id, 
+        book: id,
         user: user_id,
       });
 
       if (notification) {
         notification.notificationStatus = 1;
-        notification.messageNotification = message
+        notification.messageNotification = message;
         notification = await notification.save();
       }
     }
 
-    let notification = await Notification.find({user:req.params.id}).populate("user", "fullname email")
-    .populate("book", "title image");
-    return res.status(200).send({success:true , notification})
+    let notification = await Notification.find({ user: req.params.id })
+      .populate("user", "fullname email")
+      .populate("book", "title image");
+    return res.status(200).send({ success: true, notification });
   } catch (err) {
     console.log(err);
   }
