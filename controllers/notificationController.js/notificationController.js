@@ -21,7 +21,7 @@ exports.sendNotifications = async (req, res) => {
         { start: startTime, end: endTime, rule: "*/1 * * * * *" },
         function () {
           let notificationData = {
-            message: `This is the reminder for you that your return date for ${data.book.title} is tomorrow`,
+            message: `Reminder: ${data.book.title} return due tomorrow.`,
             books_id: data.book,
             user_id: req.params.id,
             date: new Date(),
