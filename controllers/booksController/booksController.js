@@ -18,8 +18,6 @@ exports.postBooks = async (req, res) => {
     yearofpublication: req.body.yearofpublication,
   });
 
-  // return res.status(200).send({ success: true, message: "sent to all users" });
-
   books = await books.save();
 
   if (!books) {
@@ -46,7 +44,7 @@ exports.postBooks = async (req, res) => {
 
       const emailContent = `<p>Hello, ${user.fullname}</p>
           <p>${req.body.title} book has been added to the Library.</p>
-           <p><img src="cid:image@cid" alt="Book Image" /></p>`;
+          <p><img src="cid:image@cid" alt="Book Image" /></p>`;
 
       sendEmail({
         from: "KCTLIBRARY 📧 <kct.edu.gmail.com",
