@@ -59,7 +59,7 @@ const sendEmail = (options) => {
     subject: options.subject,
     text: options.text,
     html: options.html,
-    attachments:[options.attachments]
+    // attachments:[options.attachments]
   };
   transport.sendMail(mailOptions);
 };

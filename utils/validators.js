@@ -46,7 +46,7 @@ exports.readersValidation = [
     .isEmail()
     .withMessage("Invalid email format")
     .custom((val) => {
-      return User.findOne({ email: val }).then((user) => {
+      return User.findOne({ email: val.toLowerCase() }).then((user) => {
         if (user) {
           return Promise.reject("Another user with same email already exist");
         }
@@ -93,6 +93,15 @@ exports.loginValidation = [
     .withMessage("Invalid email format"),
   check("password", "password is required").notEmpty(),
 ];
+
+//forgot password validation
+exports.forgotValidation = [
+  check("email", "Please enter your email")
+    .notEmpty()
+    .isEmail()
+    .withMessage("Invalid email format"),
+
+]
 
 // book issue request
 exports.issueRequestValidation = [

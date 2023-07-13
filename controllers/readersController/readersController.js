@@ -8,7 +8,7 @@ const generateToken = require("../../utils/generateToken");
 exports.postUser = async (req, res) => {
   let reader = new Readers({
     fullname: req.body.fullname,
-    email: req.body.email,
+    email: req.body.email.toLowerCase(),
     address: req.body.address,
     mobilenum: Number(req.body.mobilenum),
     password: req.body.password,
@@ -106,7 +106,7 @@ exports.postEmailVerification = async (req, res) => {
 };
 
 exports.resendVerification = async (req, res) => {
-  let email = await Readers.findOne({ email: req.body.email });
+  let email = await Readers.findOne({ email: req.body.email.toLowerCase() });
 
   if (!email) {
     return res.status(400).json({
@@ -137,7 +137,7 @@ exports.resendVerification = async (req, res) => {
       .json({ success: false, error: "Something went wrong" });
   }
 
-  const emailVerificationUrl = `${process.env.FRONTEND}confirmation/${token.token}`;
+  const emailVerificationUrl = `${process.env.CLIENT_SIDE}/confirmation/${token.token}`;
   sendEmail({
     from: "KCTLIBRARY 📧 <kct.edu.gmail.com",
     to: email.email,
@@ -145,7 +145,7 @@ exports.resendVerification = async (req, res) => {
     text: `hello ${email.fullname}, click your verificatinn link to continue`,
     html: `<p>Please verify your email to continue by clicking below link</p>
     <br>
-    <a href="${emailVerificationUrl}"><button>Verify your Email</button></a>`,
+    <a href=${emailVerificationUrl} target="_blank>verify email</a>`,
   });
   return res.send({
     success: true,
@@ -223,12 +223,12 @@ exports.getUser = async (req, res) => {
 
 // forgot Password
 exports.forgotPassword = async (req, res) => {
-  const user = await Readers.findOne({ email: req.body.email });
+  const user = await Readers.findOne({ email: req.body.email.toLowerCase() });
 
   if (!user) {
     return res.status(404).json({
       success: false,
-      error: "Provided email is not found please try again later",
+      error: "Provided email is not found",
     });
   }
 
@@ -254,12 +254,13 @@ exports.forgotPassword = async (req, res) => {
     });
   }
 
-  const resetPassword = `${process.env.FRONTEND}api/resetpassword/${token.token}`;
+  const resetPassword = `${process.env.CLIENT_SIDE}/api/resetpassword/${token.token}`;
+  
   sendEmail({
     from: "KCTLIBRARY 📧 <kct.edu.gmail.com",
-    to: email.email,
+    to: user.email,
     subject: "Password Reset",
-    text: `hello ${email.fullname}, click your verificatinn link to continue`,
+    text: `hello ${user.fullname}, click your verificatinn link to continue`,
     html: `<p>PReset your password by clicking below link</p>
     <br>
     <a href="${resetPassword}"><button>Reset Your Password</button></a>`,
