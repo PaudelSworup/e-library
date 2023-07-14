@@ -36,10 +36,8 @@
 //     return err
 //   }
 
-  
 // };
 // module.exports = sendEmail;
-
 
 const nodemailer = require("nodemailer");
 
@@ -61,8 +59,12 @@ const sendEmail = (options) => {
     html: options.html,
     // attachments:[options.attachments]
   };
+
+  if (JSON.stringify([options.attachments]) === JSON.stringify([undefined])) {
+    return transport.sendMail(mailOptions);
+  } else mailOptions.attachments = [options.attachments];
+
   transport.sendMail(mailOptions);
 };
 
 module.exports = sendEmail;
-

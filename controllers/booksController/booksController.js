@@ -73,7 +73,7 @@ exports.getBooks = async (req, res) => {
 
   return res.status(200).send({
     success: true,
-    books,
+    books:books.sort(()=>Math.random()-0.5),
   });
 };
 
