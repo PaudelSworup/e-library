@@ -157,7 +157,7 @@ exports.resendVerification = async (req, res) => {
 
 exports.signIn = async(req,res)=>{
   const{email,password} = req.body
-  const user = await Readers.findOne({email})
+  const user = await Readers.findOne({email:email.toLowerCase()})
 
   if (!user) {
     return res.status(401).json({
