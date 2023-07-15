@@ -145,7 +145,7 @@ exports.resendVerification = async (req, res) => {
     text: `hello ${email.fullname}, click your verificatinn link to continue`,
     html: `<p>Please verify your email to continue by clicking below link</p>
     <br>
-    <a href=${emailVerificationUrl} target="_blank>verify email</a>`,
+    <button><a href=${emailVerificationUrl}>verify email</a></button>`,
   });
   return res.send({
     success: true,

@@ -1,6 +1,6 @@
 const express = require("express");
 const {
-  postUser, getUser, postEmailVerification, signIn, forgotPassword,
+  postUser, getUser, postEmailVerification, signIn, forgotPassword, resendVerification,
 } = require("../../controllers/readersController/readersController");
 const {readersValidation, validators, loginValidation, forgotValidation } = require("../../utils/validators");
 
@@ -11,5 +11,6 @@ router.get("/users" , getUser)
 router.post("/confirmation/:token", postEmailVerification)
 router.post("/login", loginValidation, validators, signIn )
 router.post("/forgot", forgotValidation, validators,  forgotPassword)
+router.post("/resend", forgotValidation,validators,resendVerification)
 
 module.exports = router;
