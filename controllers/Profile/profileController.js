@@ -24,7 +24,7 @@ exports.uploadProfile = async (req, res) => {
 };
 
 exports.getProfile = async (req, res) => {
-  let profile = await Profile.find().populate("userId", "fullname");
+  let profile = await Profile.find().populate("userId", "fullname choosedCatgoeirs address email mobilenum ");
 
   if (!profile) {
     return res.status(400).json({
