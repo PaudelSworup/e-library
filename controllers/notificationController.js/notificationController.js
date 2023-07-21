@@ -11,8 +11,9 @@ exports.sendNotifications = async (req, res) => {
 
   const notificationPromise = new Promise((resolve) => {
     notificationsData.forEach((data) => {
-      console.log(new Date(data.returnDate).toISOString());
-      console.log(new Date(data.returnDate).toLocaleString());
+      console.log(data)
+      // console.log(new Date(data.returnDate).toISOString());
+      // console.log(new Date(data.returnDate).toLocaleString());
       const startTime = new Date(new Date() + 1000);
       // const startTime = new Date(data.returnDate - 24 * 60 * 60 * 1000);
       const endTime = new Date(startTime.getTime() + 1000);
@@ -21,7 +22,7 @@ exports.sendNotifications = async (req, res) => {
         { start: startTime, end: endTime, rule: "*/1 * * * * *" },
         function () {
           let notificationData = {
-            message: `Reminder: ${data.book.title} return due tomorrow.`,
+            message: `Your request for: ${data.book.title} is approved.`,
             books_id: data.book,
             user_id: req.params.id,
             date: new Date(),

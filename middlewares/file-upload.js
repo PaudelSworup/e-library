@@ -4,7 +4,12 @@ const path = require("path");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    let fileDestination = "public/uploads/";
+    let fileDestination = "";
+    if(file.fieldname === "image"){
+      fileDestination="public/uploads/"
+    }else if(file.fieldname === "pdf"){
+      fileDestination = "public/pdfs/"
+    }
 
     // check if directory exist
     if (!fs.existsSync(fileDestination)) {
@@ -34,11 +39,26 @@ let imageFilter = (req, file, cb) => {
   } else cb(null, true);
 };
 
+const pdfFilter = (req, file, cb) => {
+  if (!file.originalname.match(/\.(pdf)$/i)) {
+    return cb(new Error('You can upload PDF files only'), false);
+  }
+  cb(null, true);
+};
+
 const upload = multer({
   storage: storage,
-  fileFilter: imageFilter,
+  fileFilter: (req,file,cb)=>{
+    if(file.mimetype.includes("image")){
+      imageFilter(req,file,cb)
+    }else if(file.mimetype === "application/pdf"){
+      pdfFilter(req,file,cb)
+    }else{
+      cb(new Error('Unsupported file type'), false);
+    }
+  },
   limits: {
-    fileSize: 2000000, //2MB
+    fileSize: 5000000, //2MB
   },
 });
 

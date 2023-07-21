@@ -49,6 +49,12 @@ const booksSchema = new mongoose.Schema(
       trim:true,
     },
 
+    pdf:{
+      type:String,
+      required:true,
+      trim:true,
+    },
+
     yearofpublication: {
       type: Date,
       required: true,

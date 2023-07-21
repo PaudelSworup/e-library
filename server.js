@@ -28,6 +28,7 @@ app.use(bodyParser.json())
 app.use(morgan("dev"))
 app.use("/public/uploads", express.static("public/uploads"));
 app.use("/public/profile", express.static("public/profile"))
+app.use("/public/pdfs", express.static("public/pdfs"))
 app.use(cookieParser())
 app.use(cors())
 

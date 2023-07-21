@@ -5,14 +5,15 @@ const fs = require("fs");
 const path = require("path");
 
 exports.postBooks = async (req, res) => {
-  console.log(req.file.path);
+  // return console.log("image is",req.files.image[0].path , "pdf is", req.files.pdf[0].path)
   let books = new Books({
     title: req.body.title,
     isbn: Number(req.body.isbn),
     price: req.body.price,
     category: req.body.category,
     stock: req.body.stock,
-    image: req.file.path,
+    image: req.files.image[0].path,
+    pdf:req.files.pdf[0].path,
     desc: req.body.desc,
     publisher: req.body.publisher,
     yearofpublication: req.body.yearofpublication,

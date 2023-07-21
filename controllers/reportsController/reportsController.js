@@ -1,6 +1,6 @@
 const Reports = require("../../models/reports/reportsModel");
 const Readers = require("../../models/reader/readerModel");
-const { addDays } = require("date-fns");
+const { addDays, startOfDay, endOfDay } = require("date-fns");
 const Books = require("../../models/books/booksModel");
 const sendEmail = require("../../utils/sendMail");
 const schedule = require("node-schedule");
@@ -15,45 +15,44 @@ exports.issueRequest = async (req, res) => {
     // returnDate: addDays(new Date(req.body.issueDate), 10),
   });
 
-  let limitedBooks = await Reports.find({
-    user_id: req.body.user_id,
-    returnStatus: 0,
-  });
-
+  
   let issuedBooks = await Reports.findOne({
     user_id: req.body.user_id,
     books_id: req.body.books_id,
     returnStatus: 0,
   });
 
-  if (limitedBooks.length >= 3) {
+
+  const currentDate = new Date();
+  const startOfCurrentDay = startOfDay(currentDate)
+  const endOfCurrentDay = endOfDay(currentDate);
+
+
+  const userRequestToday = await Reports.find({
+    user_id: req.body.user_id,
+    issueDate: {
+      $gte: startOfCurrentDay,
+      $lt: endOfCurrentDay,
+    }, 
+  })
+
+  if (userRequestToday.length >= 3) {
     return res.status(403).json({
       success: false,
       error:
-        "You request quota has been fulled, return one of the book first to request another books",
+        "You cannot make more than three request in a day.",
     });
   }
+
+  
 
   if (issuedBooks) {
     let bookName = await Books.findOne({ _id: req.body.books_id });
     return res.status(403).json({
       success: false,
-      error: `You can't issue the same books until you return it, i.e you have issued ${bookName.title}`,
+      error: `you already have issued ${bookName.title}`,
     });
   }
-
-  let books = await Books.findOne({ _id: req.body.books_id });
-  if (books.stock == 0) {
-    return res.status.json({
-      success: false,
-      error: "Book is not in the stock right now",
-    });
-  } else {
-    books.stock = books.stock - 1;
-  }
-
-  books = await books.save();
-  // console.log(books)
 
   request = await request.save();
 
@@ -130,7 +129,6 @@ exports.approveRequest = async (req, res) => {
     if (approve.issueStatus == 0) {
       approve.issueStatus = 1;
       approve.approvedDate = Date.now();
-      approve.returnDate = addDays(Date.now(), 10);
     }
     approve = await approve.save();
 
@@ -144,14 +142,13 @@ exports.approveRequest = async (req, res) => {
     sendEmail({
       from: "KCTLIBRARY 📧 <kct.edu.gmail.com",
       to: user.email,
-      subject: "approved request",
+      subject: "Request Approved",
       text: `hello ${user.fullname}, \n your request for ${bookName.title} has been approved`,
     });
 
     let notification = new Notification({
       book: approve.books_id,
       user: req.params.id,
-      returnDate:approve.returnDate,
       date:Date.now()
     });
     notification = await notification.save();

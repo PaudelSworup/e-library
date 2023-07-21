@@ -1,4 +1,5 @@
 const Profile = require("../../models/Profile/profileModel");
+const path = require("path")
 
 exports.uploadProfile = async (req, res) => {
   let profile = await Profile.findOne({ userId: req.body.userid });
@@ -38,3 +39,15 @@ exports.getProfile = async (req, res) => {
     profile,
   });
 };
+
+const filetoDownload = "public/pdfs/java_1689956384342.pdf"
+
+exports.downloadProfile  = async(req,res)=>{
+const fileName = path.basename(filetoDownload)
+res.download(filetoDownload,fileName,(err)=>{
+  if(err){
+    return res.status(500).send({success:false, error:"Error downloading the file"})
+  }
+})
+
+}
