@@ -1,4 +1,5 @@
 const Profile = require("../../models/Profile/profileModel");
+const Books = require("../../models/books/booksModel");
 const path = require("path")
 
 exports.uploadProfile = async (req, res) => {
@@ -40,11 +41,18 @@ exports.getProfile = async (req, res) => {
   });
 };
 
-const filetoDownload = "public/pdfs/java_1689956384342.pdf"
 
-exports.downloadProfile  = async(req,res)=>{
+
+exports.downloadBook  = async(req,res)=>{
+const book = await Books.findById(req.params.bookId)
+if(!book){
+  res.status(404).send({success:false , error:"Book not found"})
+}
+res.setHeader('Content-Type', 'application/pdf');
+res.setHeader('Content-Disposition', `attachment; filename=${book.title}.pdf`);
+const filetoDownload = book.pdf
 const fileName = path.basename(filetoDownload)
-res.download(filetoDownload,fileName,(err)=>{
+res.sendFile(path.resolve(filetoDownload),(err)=>{
   if(err){
     return res.status(500).send({success:false, error:"Error downloading the file"})
   }

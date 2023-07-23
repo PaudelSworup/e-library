@@ -1,4 +1,5 @@
 const Books = require("../../models/books/booksModel");
+const notificationModel = require("../../models/notification/notificationModel");
 const Users = require("../../models/reader/readerModel");
 const sendEmail = require("../../utils/sendMail");
 const fs = require("fs");
@@ -13,7 +14,7 @@ exports.postBooks = async (req, res) => {
     category: req.body.category,
     stock: req.body.stock,
     image: req.files.image[0].path,
-    pdf:req.files.pdf[0].path,
+    pdf: req.files.pdf[0].path,
     desc: req.body.desc,
     publisher: req.body.publisher,
     yearofpublication: req.body.yearofpublication,
@@ -74,7 +75,7 @@ exports.getBooks = async (req, res) => {
 
   return res.status(200).send({
     success: true,
-    books:books.sort(()=>Math.random()-0.5),
+    books: books.sort(() => Math.random() - 0.5),
   });
 };
 

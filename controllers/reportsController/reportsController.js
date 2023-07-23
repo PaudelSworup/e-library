@@ -149,7 +149,8 @@ exports.approveRequest = async (req, res) => {
     let notification = new Notification({
       book: approve.books_id,
       user: req.params.id,
-      date:Date.now()
+      date:Date.now(),
+      messageNotification:`your request for ${bookName?.title} is approved`
     });
     notification = await notification.save();
     if (notification) {
@@ -266,7 +267,7 @@ exports.getHistory = async (req, res) => {
   let history = await Reports.find()
     .select("-createdAt")
     .select("-updatedAt")
-    .populate("books_id", "title , image")
+    .populate("books_id", "title image pdf")
     .populate("user_id", "fullname");
 
   const filterData = history.filter((data) => {

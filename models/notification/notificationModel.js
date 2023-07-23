@@ -11,7 +11,6 @@ const notificationSchema = new mongoose.Schema({
 
   user: {
     type: ObjectId,
-    required: true,
     ref: "Readers",
   },
 
