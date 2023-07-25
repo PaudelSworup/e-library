@@ -48,11 +48,12 @@ const book = await Books.findById(req.params.bookId)
 if(!book){
   res.status(404).send({success:false , error:"Book not found"})
 }
+res.setHeader('Access-Control-Expose-Headers','Content-Disposition');
+res.setHeader('Content-Disposition', `attachment; filename=${book?.title}.pdf`);
 res.setHeader('Content-Type', 'application/pdf');
-res.setHeader('Content-Disposition', `attachment; filename=${book.title}.pdf`);
 const filetoDownload = book.pdf
-const fileName = path.basename(filetoDownload)
-res.sendFile(path.resolve(filetoDownload),(err)=>{
+// const fileName = path.basename(filetoDownload)
+res.download(filetoDownload, `${book.title}.pdf`, (err)=>{
   if(err){
     return res.status(500).send({success:false, error:"Error downloading the file"})
   }

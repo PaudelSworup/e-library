@@ -12,7 +12,7 @@ exports.postUser = async (req, res) => {
     address: req.body.address,
     mobilenum: Number(req.body.mobilenum),
     password: req.body.password,
-    choosedCatgoeirs:req.body.choosedCatgoeirs
+    choosedCatgoeirs: req.body.choosedCatgoeirs,
   });
 
   reader = await reader.save();
@@ -54,8 +54,28 @@ exports.postUser = async (req, res) => {
   });
 };
 
-// confirming the email
+// edit and update the details
+exports.updateUserDetails = async (req, res) => {
+  console.log(req.params.id)
+  const { name, email, phone, address } = req.body;
+  let user = await Readers.findOne({ _id: req.params.id });
 
+  if (!user) {
+    return res.status(400).json({success:false, error: "unable to find the user" });
+  } else {
+    user.fullname = name;
+    user.email = email;
+    user.mobilenum = phone;
+    user.address = address;
+    user = await user.save();
+    if (!user) {
+      return res.status(500).json({success:false, error: "error in Editing your details" });
+    }
+    return res.status(200).json({success:true, message: "Successfully changed your details" });
+  }
+};
+
+// confirming the email
 exports.postEmailVerification = async (req, res) => {
   const token = await Token.findOne({ token: req.params.token });
 
@@ -153,15 +173,13 @@ exports.resendVerification = async (req, res) => {
   });
 };
 
-
-
-exports.signIn = async(req,res)=>{
-  const{email,password} = req.body
-  const user = await Readers.findOne({email:email.toLowerCase()})
+exports.signIn = async (req, res) => {
+  const { email, password } = req.body;
+  const user = await Readers.findOne({ email: email.toLowerCase() });
 
   if (!user) {
     return res.status(401).json({
-      success:false,
+      success: false,
       error:
         "this email is not registered yet, please register your account first",
     });
@@ -169,24 +187,24 @@ exports.signIn = async(req,res)=>{
 
   // if email found then check password for that email
   if (!user.authenticate(password)) {
-    return res.status(401).json({ success:false, error: "Wrong credential" });
+    return res.status(401).json({ success: false, error: "Wrong credential" });
   }
-
 
   // check if user is verified
   if (!user.isVerified) {
-    return res.status(400).json({ success:false, error: "verify your email to continue" });
+    return res
+      .status(400)
+      .json({ success: false, error: "verify your email to continue" });
   }
 
-
   // now generate jwt
-  const token = generateToken(user._id)
+  const token = generateToken(user._id);
 
-  res.cookie("token", token , {expire:Date.now() + 99999} )
+  res.cookie("token", token, { expire: Date.now() + 99999 });
 
-  const { _id, fullname, role,address , mobilenum , choosedCatgoeirs } = user;
+  const { _id, fullname, role, address, mobilenum, choosedCatgoeirs } = user;
   return res.json({
-    success:true,
+    success: true,
     token,
     user: {
       _id,
@@ -195,10 +213,10 @@ exports.signIn = async(req,res)=>{
       email,
       address,
       choosedCatgoeirs,
-      mobilenum
+      mobilenum,
     },
   });
-}
+};
 
 exports.getUser = async (req, res) => {
   const user = await Readers.find()
@@ -247,7 +265,7 @@ exports.forgotPassword = async (req, res) => {
     });
   }
 
-  if(token.expiresIn < Date.now()){
+  if (token.expiresIn < Date.now()) {
     return res.status(400).json({
       status: false,
       error: "Token has expired",
@@ -255,7 +273,7 @@ exports.forgotPassword = async (req, res) => {
   }
 
   const resetPassword = `${process.env.CLIENT_SIDE}/api/resetpassword/${token.token}`;
-  
+
   sendEmail({
     from: "KCTLIBRARY 📧 <kct.edu.gmail.com",
     to: user.email,
@@ -266,5 +284,7 @@ exports.forgotPassword = async (req, res) => {
     <a href="${resetPassword}"><button>Reset Your Password</button></a>`,
   });
 
-  res.status(200).json({success:true, message: "forgot password link has been sent" });
+  res
+    .status(200)
+    .json({ success: true, message: "forgot password link has been sent" });
 };

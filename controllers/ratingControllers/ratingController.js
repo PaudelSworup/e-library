@@ -79,9 +79,9 @@ exports.recommendedBooks = async (req, res) => {
     "title image isbn desc stock yearofpublication"
   );
 
-  if (data.length <= 2) {
-    return;
-  }
+  // if (data.length <= 2) {
+  //   return;
+  // }
 
   // create a matrix of user ratings
   const matrix = data.reduce((matrix, { user, book, rating }) => {
@@ -140,6 +140,7 @@ exports.recommendedBooks = async (req, res) => {
     const recommendations = Object.keys(bookScores).sort(
       (a, b) => bookScores[b] - bookScores[a]
     );
+
 
     const idRegex = /_id:\s*new\s+ObjectId\("(\w+)"\)/;
     const titleRegex = /title:\s*'([^']*)'/;
