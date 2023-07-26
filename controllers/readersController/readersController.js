@@ -56,12 +56,13 @@ exports.postUser = async (req, res) => {
 
 // edit and update the details
 exports.updateUserDetails = async (req, res) => {
-  console.log(req.params.id)
   const { name, email, phone, address } = req.body;
   let user = await Readers.findOne({ _id: req.params.id });
 
   if (!user) {
-    return res.status(400).json({success:false, error: "unable to find the user" });
+    return res
+      .status(400)
+      .json({ success: false, error: "unable to find the user" });
   } else {
     user.fullname = name;
     user.email = email;
@@ -69,9 +70,13 @@ exports.updateUserDetails = async (req, res) => {
     user.address = address;
     user = await user.save();
     if (!user) {
-      return res.status(500).json({success:false, error: "error in Editing your details" });
+      return res
+        .status(500)
+        .json({ success: false, error: "error in Editing your details" });
     }
-    return res.status(200).json({success:true, message: "Successfully changed your details" });
+    return res
+      .status(200)
+      .json({ success: true, message: "Successfully changed your details" });
   }
 };
 
@@ -287,4 +292,86 @@ exports.forgotPassword = async (req, res) => {
   res
     .status(200)
     .json({ success: true, message: "forgot password link has been sent" });
+};
+
+// reset password
+exports.resetPassword = async (req, res) => {
+  let token = await Token.findOne({ token: req.params.token });
+
+  if (!token) {
+    return res.status(401).json({ success: false, error: "Invalid Token" });
+  }
+
+  if (token.expiresIn < Date.now()) {
+    return res.status(400).json({
+      status: false,
+      error: "Token has expired",
+    });
+  }
+  let user = await Readers.findOne({ _id: token.userId });
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      error: "unable to find the user for valid token",
+    });
+  }
+
+  user.hased_password = user.encryptPassword(req.body.password);
+  user = await user.save();
+
+  if (!user) {
+    return res
+      .status(401)
+      .json({ success: false, error: "Failed to reset password" });
+  }
+  return res
+    .status(200)
+    .json({ success: true, message: "Password has been reset successfully" });
+};
+
+// change password
+exports.changePassword = async (req, res) => {
+  const { password, new_password, repeat_password } = req.body;
+  let user = await Readers.findOne({ _id: req.params.id });
+
+  if (!user) {
+    return res
+      .status(404)
+      .json({ success:false, error: "user do not exist in our system" });
+  }
+
+  if (!user.isVerified) {
+    return res
+      .status(401)
+      .json({
+        success: false,
+        error: "verify your accout to change the password",
+      });
+  }
+
+  let verify_password = await Readers.findOne({
+    hased_password: user.encryptPassword(password),
+  });
+  if (!verify_password) {
+    return res
+      .status(403)
+      .json({ success: false, error: "your current password didn't match " });
+  } else {
+    if (new_password === repeat_password) {
+      user.hased_password = user.encryptPassword(new_password);
+      user = await user.save();
+
+      if (!user) {
+        return res
+          .status(400)
+          .json({ success: false, error: "Something went wrong" });
+      }
+      return res.status(200).json({success:true, message: "password has been changed" });
+    } else {
+      return res
+        .status(400)
+        .json({ success:false, error: "your new password and repeat password didn't match" });
+    }
+  }
 };
