@@ -18,7 +18,6 @@ const booksSchema = new mongoose.Schema(
 
     price: {
       type: Number,
-      required: true,
       trim:true,
     },
 
@@ -36,6 +35,8 @@ const booksSchema = new mongoose.Schema(
 
     desc: {
       type: String,
+      required: true,
+      trim:true,
     },
 
     stock: {

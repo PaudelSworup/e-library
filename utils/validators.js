@@ -23,13 +23,12 @@ exports.booksValidation = [
     .custom((val) => {
       return Books.findOne({ isbn: val }).then((num) => {
         if (num) {
-          return Promise.reject("isbn with same num already exist");
+          return Promise.reject("Book with Same ISBN already exist");
         }
       });
     }),
   check("stock", "Enter the stock quantity").notEmpty(),
   check("desc", "please enter some book description").notEmpty(),
-  check("price", "please enter book price").notEmpty(),
   check("publisher", "please enter publisher name").notEmpty(),
   check("category", "please choose books category").notEmpty(),
   check(
