@@ -38,7 +38,7 @@ exports.postUser = async (req, res) => {
     });
   }
 
-  const emailVerificationUrl = `${process.env.FRONTEND}confirmation/${token.token}`;
+  const emailVerificationUrl = `${process.env.CLIENT_SIDE}/confirmation/${token.token}`;
   sendEmail({
     from: "KCTLIBRARY 📧 <kct.edu.gmail.com",
     to: reader.email,

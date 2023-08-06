@@ -6,7 +6,24 @@ const fs = require("fs");
 const path = require("path");
 
 exports.postBooks = async (req, res) => {
-  // return console.log("image is",req.files.image[0].path , "pdf is", req.files.pdf[0].path)
+  // console.log(req.files.pdf[0].path)
+  fs.stat(req.files.pdf[0].path, (err, stats) => {
+    if (err) {
+      console.error("Error while getting file size:", err);
+      return res
+        .status(500)
+        .json({ success: false, error: "Error while getting file size" });
+    }
+    const fileSizeInBytes = stats.size;
+    if (fileSizeInBytes > 5 * 1024 * 1024) {
+      fs.unlink(req.files.image[0].path, (err) => {
+        if (err) {
+          console.log("Error while deleting the file:", err);
+        }
+        console.log("Uploaded image deleted due to size limit exceeded");
+      });
+    }
+  });
   let books = new Books({
     title: req.body.title,
     isbn: Number(req.body.isbn),

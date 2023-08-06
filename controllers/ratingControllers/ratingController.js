@@ -79,9 +79,6 @@ exports.recommendedBooks = async (req, res) => {
     "title image isbn desc stock yearofpublication"
   );
 
-  // if (data.length <= 2) {
-  //   return;
-  // }
 
   // create a matrix of user ratings
   const matrix = data.reduce((matrix, { user, book, rating }) => {

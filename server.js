@@ -42,6 +42,8 @@ app.use("/api" , profileRoute)
 app.use("/api" , likeRoute)
 app.use("/api" , notificationRoute)
 
+// multer middlwware
+
 
 
 

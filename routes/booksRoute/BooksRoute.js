@@ -9,6 +9,9 @@ const upload = require("../../middlewares/file-upload")
 
 
 
+
+
+
 // routes
 router.post('/books', upload.fields([{ name: 'image', maxCount: 1 }, { name: 'pdf', maxCount: 1 }]), booksValidation, validators, postBooks);
 router.get("/books",getBooks)
