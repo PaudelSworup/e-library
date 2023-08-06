@@ -305,7 +305,7 @@ exports.getMostRequested = async (req, res) => {
     const mostRequestedBooks = [];
     for (const [bookId, count] of requestCounts) {
       if (count >= 2) {
-        const book = await Books.findById(bookId);
+        const book = await Books.findById(bookId).populate("category");
         mostRequestedBooks.push(book);
       }
     }

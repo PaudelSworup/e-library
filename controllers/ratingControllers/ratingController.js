@@ -74,11 +74,15 @@ exports.getSingle = async (req, res) => {
 };
 
 exports.recommendedBooks = async (req, res) => {
-  const data = await Ratings.find().populate(
-    "book",
-    "title image isbn desc stock yearofpublication"
-  );
-
+  const data = await Ratings.find().populate({
+    path: "book",
+    select: "title category image isbn desc stock yearofpublication",
+    populate: { path: "category", select: "category_name" }, // Populate the category field with the name
+  });
+  // const data = await Ratings.find().populate(
+  //   "book",
+  //   "title category image isbn desc stock yearofpublication"
+  // );
 
   // create a matrix of user ratings
   const matrix = data.reduce((matrix, { user, book, rating }) => {
@@ -138,6 +142,7 @@ exports.recommendedBooks = async (req, res) => {
       (a, b) => bookScores[b] - bookScores[a]
     );
 
+    console.log(recommendations);
 
     const idRegex = /_id:\s*new\s+ObjectId\("(\w+)"\)/;
     const titleRegex = /title:\s*'([^']*)'/;
@@ -146,6 +151,7 @@ exports.recommendedBooks = async (req, res) => {
     const stockRegex = /stock:\s*(\d+)/;
     const imageRegex = /image:\s*'([^']*)'/;
     const yopRegex = /yearofpublication: ([\d-]+T[\d:.]+Z)/;
+    const categoryRegex = /category_name:\s*'([^']*)'/;
 
     let newRecommendations = [];
     recommendations.forEach((book) => {
@@ -156,6 +162,8 @@ exports.recommendedBooks = async (req, res) => {
       const stockMatch = book.match(stockRegex);
       const imageMatch = book.match(imageRegex);
       const yearMatch = book.match(yopRegex);
+      const categoryMatch = book.match(categoryRegex)
+      
 
       if (titleMatch && descMatch) {
         const title = titleMatch[1];
@@ -165,6 +173,7 @@ exports.recommendedBooks = async (req, res) => {
         const image = imageMatch[1];
         const _id = idMatch[1];
         const yearofpublication = yearMatch[1];
+        const category_name = categoryMatch[1]
         newRecommendations.push({
           _id,
           title,
@@ -173,6 +182,7 @@ exports.recommendedBooks = async (req, res) => {
           stock,
           image,
           yearofpublication,
+          category_name
         });
       }
     });

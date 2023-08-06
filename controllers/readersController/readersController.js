@@ -88,7 +88,7 @@ exports.postEmailVerification = async (req, res) => {
   if (!token) {
     return res.status(401).json({
       success: false,
-      message: "Invalid token or Token may have expired",
+      error: "Invalid token",
     });
   }
 
@@ -96,7 +96,7 @@ exports.postEmailVerification = async (req, res) => {
   if (token.expiresIn < Date.now()) {
     return res.status(401).json({
       success: false,
-      message: "Token had expired",
+      error: "Token had expired",
     });
   }
 
@@ -105,7 +105,7 @@ exports.postEmailVerification = async (req, res) => {
   if (!reader) {
     return res.status(401).json({
       success: false,
-      message: "User not found",
+      error: "User not found",
     });
   }
 
