@@ -15,36 +15,30 @@ exports.issueRequest = async (req, res) => {
     // returnDate: addDays(new Date(req.body.issueDate), 10),
   });
 
-  
   let issuedBooks = await Reports.findOne({
     user_id: req.body.user_id,
     books_id: req.body.books_id,
     returnStatus: 0,
   });
 
-
   const currentDate = new Date();
-  const startOfCurrentDay = startOfDay(currentDate)
+  const startOfCurrentDay = startOfDay(currentDate);
   const endOfCurrentDay = endOfDay(currentDate);
-
 
   const userRequestToday = await Reports.find({
     user_id: req.body.user_id,
     issueDate: {
       $gte: startOfCurrentDay,
       $lt: endOfCurrentDay,
-    }, 
-  })
+    },
+  });
 
   if (userRequestToday.length >= 3) {
     return res.status(403).json({
       success: false,
-      error:
-        "You cannot make more than three request in a day.",
+      error: "You cannot make more than three request in a day.",
     });
   }
-
-  
 
   if (issuedBooks) {
     let bookName = await Books.findOne({ _id: req.body.books_id });
@@ -75,7 +69,11 @@ exports.getIssueRequest = async (req, res) => {
     .select("-createdAt")
     .select("-updatedAt")
     .populate("user_id", "fullname")
-    .populate("books_id", "title image");
+    .populate({
+      path: "books_id",
+      select: "title category image",
+      populate: { path: "category", select: "category_name" }, // Populate the category field with the name
+    });
 
   if (!request) {
     return res.status(400).json({
@@ -149,14 +147,14 @@ exports.approveRequest = async (req, res) => {
     let notification = new Notification({
       book: approve.books_id,
       user: req.params.id,
-      date:Date.now(),
-      messageNotification:`your request for ${bookName?.title} is approved`
+      date: Date.now(),
+      messageNotification: `your request for ${bookName?.title} is approved`,
     });
     notification = await notification.save();
     if (notification) {
       return res.status(200).json({
         success: true,
-        message: "Your request has been approved",
+        message: "Request has been approved",
       });
     }
   }

@@ -6,36 +6,12 @@ exports.sendNotifications = async (req, res) => {
     .populate("user", "fullname email")
     .populate("book", "title image");
 
-  let sendNotifiactionToAll = await Notification.find({ user: null });
-
   const notification = [];
   const jobPromises = []; // Array to store the job promises
 
   const notificationPromise = new Promise((resolve) => {
     if (notificationsData) {
       notificationsData.forEach((data) => {
-        const startTime = new Date(new Date() + 1000);
-        const endTime = new Date(startTime.getTime() + 1000);
-
-        const job = schedule.scheduleJob(
-          { start: startTime, end: endTime, rule: "*/1 * * * * *" },
-          function () {
-            notification.push(data);
-          }
-        );
-
-        if (job) {
-          jobPromises.push(
-            new Promise((resolve) => {
-              job.on("run", resolve);
-            })
-          );
-        }
-      });
-    }
-
-    if (sendNotifiactionToAll) {
-      sendNotifiactionToAll.forEach((data) => {
         const startTime = new Date(new Date() + 1000);
         const endTime = new Date(startTime.getTime() + 1000);
 

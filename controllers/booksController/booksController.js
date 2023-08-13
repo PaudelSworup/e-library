@@ -1,12 +1,10 @@
 const Books = require("../../models/books/booksModel");
-const notificationModel = require("../../models/notification/notificationModel");
 const Users = require("../../models/reader/readerModel");
 const sendEmail = require("../../utils/sendMail");
 const fs = require("fs");
 const path = require("path");
 
 exports.postBooks = async (req, res) => {
-  // console.log(req.files.pdf[0].path)
   fs.stat(req.files.pdf[0].path, (err, stats) => {
     if (err) {
       console.error("Error while getting file size:", err);
@@ -149,29 +147,3 @@ exports.deleteBooks = (req, res) => {
       return res.status(400).json({ error: err });
     });
 };
-
-// exports.getAllBooks = async (req, res) => {
-//   let books = await Books.find()
-//     // .populate("category", "category_name")
-
-//   if (!books) {
-//     return res.status(400).json({
-//       success: false,
-//       error: "Something went Wrong",
-//     });
-//   }
-
-//   const recentlyAdded = books.map((data)=>{
-//     return {...data, timestamps:new Date(data.createdAt).getTime()}
-//   })
-
-//   recentlyAdded.sort((a,b)=>b.timestamps - a.timestamps)
-
-//   const recent = recentlyAdded.slice(0,3)
-//   console.log(recent)
-
-//   return res.status(200).send({
-//     success: true,
-//     recent,
-//   });
-// };

@@ -142,8 +142,6 @@ exports.recommendedBooks = async (req, res) => {
       (a, b) => bookScores[b] - bookScores[a]
     );
 
-    console.log(recommendations);
-
     const idRegex = /_id:\s*new\s+ObjectId\("(\w+)"\)/;
     const titleRegex = /title:\s*'([^']*)'/;
     const descRegex = /desc:\s*'([^']*)'/;
@@ -162,8 +160,7 @@ exports.recommendedBooks = async (req, res) => {
       const stockMatch = book.match(stockRegex);
       const imageMatch = book.match(imageRegex);
       const yearMatch = book.match(yopRegex);
-      const categoryMatch = book.match(categoryRegex)
-      
+      const categoryMatch = book.match(categoryRegex);
 
       if (titleMatch && descMatch) {
         const title = titleMatch[1];
@@ -173,7 +170,7 @@ exports.recommendedBooks = async (req, res) => {
         const image = imageMatch[1];
         const _id = idMatch[1];
         const yearofpublication = yearMatch[1];
-        const category_name = categoryMatch[1]
+        const category_name = categoryMatch[1];
         newRecommendations.push({
           _id,
           title,
@@ -182,7 +179,7 @@ exports.recommendedBooks = async (req, res) => {
           stock,
           image,
           yearofpublication,
-          category_name
+          category_name,
         });
       }
     });
