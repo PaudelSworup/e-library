@@ -48,24 +48,26 @@ exports.updateStatus = async (req, res) => {
   let { newData } = req.body;
   console.log(newData);
   try {
-    for (let { id, user_id, message } of newData) {
-      let notification = await Notification.findOne({
-        book: id,
-        user: user_id,
-      });
-
-      if (notification) {
-        notification.notificationStatus = 1;
-        notification.messageNotification = message;
-        notification = await notification.save();
-      }
-    }
-
-    let notification = await Notification.find({ user: req.params.id })
+    const updatePromises = newData.map(async ({ id, user_id, message }) => {
+      return Notification.updateMany(
+        { book: id, user: user_id },
+        {
+          $set: {
+            notificationStatus: 1,
+            messageNotification: message,
+          },
+        }
+      );
+    });
+    await Promise.all(updatePromises);
+    const notifications = await Notification.find({ user: req.params.id })
       .populate("user", "fullname email")
       .populate("book", "title image");
-    return res.status(200).send({ success: true, notification });
+
+    return res.status(200).send({ success: true, notification: notifications });
   } catch (err) {
-    console.log(err);
+    return res
+      .status(500)
+      .send({ success: false, error: "Internal server error" });
   }
-};
+  };

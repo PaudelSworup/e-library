@@ -4,6 +4,8 @@ const crypto = require("crypto");
 const { addMinutes } = require("date-fns");
 const sendEmail = require("../../utils/sendMail");
 const generateToken = require("../../utils/generateToken");
+const getIp = require("../../utils/getIp");
+const getLocation = require("../../utils/GetLocation");
 
 exports.postUser = async (req, res) => {
   let reader = new Readers({
@@ -182,6 +184,8 @@ exports.signIn = async (req, res) => {
   const { email, password } = req.body;
   const user = await Readers.findOne({ email: email.toLowerCase() });
 
+  const clientIp = await getIp();
+
   if (!user) {
     return res.status(401).json({
       success: false,
@@ -205,7 +209,24 @@ exports.signIn = async (req, res) => {
   // now generate jwt
   const token = generateToken(user._id);
 
+  const location = await getLocation(clientIp);
+
   res.cookie("token", token, { expire: Date.now() + 99999 });
+  sendEmail({
+    from: "KCTLIBRARY 📧 <kct.edu.gmail.com",
+    to: user.email,
+    subject: "Did you just Login to your account?",
+    html: `
+   
+    <h4>Hello ${user.fullname},</h4>
+    <p>we noticed that your account was logged in  Near ${location.city}, ${location.country}</p>
+    <p>If this was you, you don't need to do anything.However, if it wasn't you, we recommend changing your password for added security</p>
+    <p>Thanks,</p>
+    <p>Security Team</p>
+    
+    
+    `,
+  });
 
   const { _id, fullname, role, address, mobilenum, choosedCatgoeirs } = user;
   return res.json({
@@ -284,7 +305,7 @@ exports.forgotPassword = async (req, res) => {
     to: user.email,
     subject: "Password Reset",
     text: `hello ${user.fullname}, click your verificatinn link to continue`,
-    html: `<p>PReset your password by clicking below link</p>
+    html: `<p>Reset your password by clicking below link</p>
     <br>
     <a href="${resetPassword}"><button>Reset Your Password</button></a>`,
   });
@@ -338,16 +359,14 @@ exports.changePassword = async (req, res) => {
   if (!user) {
     return res
       .status(404)
-      .json({ success:false, error: "user do not exist in our system" });
+      .json({ success: false, error: "user do not exist in our system" });
   }
 
   if (!user.isVerified) {
-    return res
-      .status(401)
-      .json({
-        success: false,
-        error: "verify your accout to change the password",
-      });
+    return res.status(401).json({
+      success: false,
+      error: "verify your accout to change the password",
+    });
   }
 
   let verify_password = await Readers.findOne({
@@ -367,11 +386,14 @@ exports.changePassword = async (req, res) => {
           .status(400)
           .json({ success: false, error: "Something went wrong" });
       }
-      return res.status(200).json({success:true, message: "password has been changed" });
-    } else {
       return res
-        .status(400)
-        .json({ success:false, error: "your new password and repeat password didn't match" });
+        .status(200)
+        .json({ success: true, message: "password has been changed" });
+    } else {
+      return res.status(400).json({
+        success: false,
+        error: "your new password and repeat password didn't match",
+      });
     }
   }
 };
