@@ -6,6 +6,9 @@ const sendEmail = require("../../utils/sendMail");
 const generateToken = require("../../utils/generateToken");
 const getIp = require("../../utils/getIp");
 const getLocation = require("../../utils/GetLocation");
+const ReconizeDevice = require("../../models/DeviceReconization/detectDevice");
+const uaParser = require("ua-parser-js");
+const otpModel = require("../../models/otpModel");
 
 exports.postUser = async (req, res) => {
   let reader = new Readers({
@@ -180,8 +183,16 @@ exports.resendVerification = async (req, res) => {
   });
 };
 
+// for login
 exports.signIn = async (req, res) => {
-  const { email, password } = req.body;
+  const userAgents = req.headers["user-agent"];
+
+  const parser = new uaParser();
+  const result = parser.setUA(userAgents).getResult();
+
+  const { email, password, width, height } = req.body;
+  const attributes = [userAgents, width, height].join("|");
+
   const user = await Readers.findOne({ email: email.toLowerCase() });
 
   const clientIp = await getIp();
@@ -208,40 +219,86 @@ exports.signIn = async (req, res) => {
 
   // now generate jwt
   const token = generateToken(user._id);
-
-  const location = await getLocation(clientIp);
-
   res.cookie("token", token, { expire: Date.now() + 99999 });
-  sendEmail({
-    from: "KCTLIBRARY 📧 <kct.edu.gmail.com",
-    to: user.email,
-    subject: "Did you just Login to your account?",
-    html: `
-   
+
+  const storedDevice = await ReconizeDevice.findOne({ userId: user._id });
+
+  if (!storedDevice) {
+    let reconizeDevice = new ReconizeDevice({
+      userId: user._id,
+      userAgents: attributes,
+    });
+
+    reconizeDevice = await reconizeDevice.save();
+  }
+
+  if (storedDevice && storedDevice.userAgents.includes(attributes)) {
+    const { _id, fullname, role, address, mobilenum, choosedCatgoeirs } = user;
+    return res.json({
+      success: true,
+      token,
+      user: {
+        _id,
+        fullname,
+        role,
+        email,
+        address,
+        choosedCatgoeirs,
+        mobilenum,
+      },
+    });
+  } else {
+    const location = await getLocation(clientIp);
+    let otp = new otpModel({
+      userId: user._id,
+      otp: Math.floor(1000 + Math.random() * 9000),
+      expiresIn: addMinutes(Date.now(), 10),
+    });
+
+    otp = await otp.save();
+
+    
+
+    
+
+    sendEmail({
+      from: "KCTLIBRARY 📧 <kct.edu.gmail.com",
+      to: user.email,
+      subject: "Did you just Login to your account?",
+      html: `
+
     <h4>Hello ${user.fullname},</h4>
-    <p>we noticed that your account was logged in  Near ${location.city}, ${location.country}</p>
-    <p>If this was you, you don't need to do anything.However, if it wasn't you, we recommend changing your password for added security</p>
+    <p>We noticed a new sign-in to your Account from  ${result.os.name} device using ${result.browser.name} browser located near ${location.city}, ${location.country}</p>
+    <p>OTP:${otp.otp}</p>
     <p>Thanks,</p>
     <p>Security Team</p>
-    
-    
-    `,
-  });
 
-  const { _id, fullname, role, address, mobilenum, choosedCatgoeirs } = user;
-  return res.json({
-    success: true,
-    token,
-    user: {
-      _id,
-      fullname,
-      role,
-      email,
-      address,
-      choosedCatgoeirs,
-      mobilenum,
-    },
-  });
+    `,
+    });
+
+    return res.status(401).json({ success: false, newDevice: true });
+
+    // await ReconizeDevice.findOneAndUpdate(
+    //   { userId: user._id },
+    //   { $addToSet: { userAgents: attributes } },
+    //   { upsert: true }
+    // );
+
+    // const { _id, fullname, role, address, mobilenum, choosedCatgoeirs } = user;
+    // return res.json({
+    //   success: true,
+    //   token,
+    //   user: {
+    //     _id,
+    //     fullname,
+    //     role,
+    //     email,
+    //     address,
+    //     choosedCatgoeirs,
+    //     mobilenum,
+    //   },
+    // });
+  }
 };
 
 exports.getUser = async (req, res) => {
@@ -249,8 +306,7 @@ exports.getUser = async (req, res) => {
     .select("-createdAt")
     .select("-updatedAt")
     .select("-salt")
-    .select("-hased_password")
-    .select("-role");
+    .select("-hased_password");
 
   if (!user) {
     return res.status(400).json({
@@ -396,4 +452,21 @@ exports.changePassword = async (req, res) => {
       });
     }
   }
+};
+
+exports.deleteUsers = (req, res) => {
+  Readers.findByIdAndRemove(req.params.id)
+    .then((user) => {
+      if (!user) {
+        return res
+          .status(403)
+          .json({ success: false, error: "user not found" });
+      } else
+        return res
+          .status(200)
+          .json({ success: true, message: "user has been Removed" });
+    })
+    .catch((err) => {
+      return res.status(400).json({ error: err });
+    });
 };

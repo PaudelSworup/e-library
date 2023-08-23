@@ -8,6 +8,8 @@ require("./database/DB_Connection")
 
 const morgan  = require("morgan")
 const cors = require("cors")
+// const useragent = require('express-useragent');
+
 
 
 const categoryRoute = require("./routes/categoryRoute/CategoryRoute")
@@ -18,6 +20,7 @@ const ratingRoute = require("./routes/ratingsRoute/ratingRoute")
 const profileRoute = require("./routes/profileRoute/profileRoutes")
 const likeRoute = require("./routes/likeRoute/likeRoute")
 const notificationRoute = require("./routes/notificationRoutes/notificationRoute")
+const otpRoute = require("./routes/otpRoute/otpRoute")
 
 
 
@@ -41,8 +44,10 @@ app.use("/api" , ratingRoute)
 app.use("/api" , profileRoute)
 app.use("/api" , likeRoute)
 app.use("/api" , notificationRoute)
+app.use("/api",otpRoute)
 
-// multer middlwware
+// useragent middlwware
+// app.use(useragent.express());
 
 
 

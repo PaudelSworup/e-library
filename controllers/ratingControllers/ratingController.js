@@ -79,13 +79,15 @@ exports.recommendedBooks = async (req, res) => {
     select: "title category image isbn desc stock yearofpublication",
     populate: { path: "category", select: "category_name" }, // Populate the category field with the name
   });
+
+  const dataGTE3 = data.filter((rating=>rating?.rating >=3))
   // const data = await Ratings.find().populate(
   //   "book",
   //   "title category image isbn desc stock yearofpublication"
   // );
 
   // create a matrix of user ratings
-  const matrix = data.reduce((matrix, { user, book, rating }) => {
+  const matrix = dataGTE3.reduce((matrix, { user, book, rating }) => {
     if (!matrix[user]) matrix[user] = {};
     matrix[user][book] = rating;
     return matrix;
