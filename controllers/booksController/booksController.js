@@ -1,4 +1,5 @@
 const Books = require("../../models/books/booksModel");
+const savedBookModel = require("../../models/books/savedBookModel");
 const Users = require("../../models/reader/readerModel");
 const sendEmail = require("../../utils/sendMail");
 const fs = require("fs");
@@ -129,6 +130,67 @@ exports.getBookByCategory = async (req, res) => {
     success: true,
     books,
   });
+};
+
+exports.addBookmark = async (req, res) => {
+  let books = new savedBookModel({
+    userId: req.body.userId,
+    book: req.body.book,
+  });
+
+  books = await books.save();
+
+  if (!books) {
+    return res
+      .status(400)
+      .json({ success: false, error: "Something went wrong" });
+  }
+
+  return res
+    .status(200)
+    .json({ success: true, message: "Book has been added to your wishlist" });
+};
+
+exports.getBookmark = async (req, res) => {
+  let books = await savedBookModel.find().populate({
+    path: "book",
+    select: "title category image isbn desc stock yearofpublication",
+    populate: { path: "category", select: "category_name" },
+  });
+  if (!books) {
+    return res.status(400).json({
+      success: false,
+      error: "Something went Wrong",
+    });
+  }
+
+  return res.status(200).send({
+    success: true,
+    books,
+  });
+};
+
+exports.removeBookmark = async (req, res) => {
+  let bookMarkedBook = await savedBookModel.findOne({
+    userId: req.params.userId,
+    book: req.params.bookId,
+  });
+  savedBookModel
+    .findByIdAndRemove(bookMarkedBook?._id)
+    .then((book) => {
+      if (!book) {
+        return res
+          .status(403)
+          .json({ success: false, error: "Books not found" });
+      } else
+        return res.status(200).json({
+          success: true,
+          message: "Book has been removed from your wishlist",
+        });
+    })
+    .catch((err) => {
+      return res.status(400).json({ error: err });
+    });
 };
 
 exports.deleteBooks = (req, res) => {

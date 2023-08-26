@@ -1,5 +1,5 @@
 const express = require("express")
-const { postBooks, getBooks, deleteBooks, getBookByCategory, getSingleBook } = require("../../controllers/booksController/booksController")
+const { postBooks, getBooks, deleteBooks, getBookByCategory, getSingleBook, addBookmark, removeBookmark, getBookmark } = require("../../controllers/booksController/booksController")
 const { returnBooks } = require("../../controllers/reportsController/reportsController")
 const { booksValidation, validators } = require("../../utils/validators")
 
@@ -17,6 +17,9 @@ router.post('/books', upload.fields([{ name: 'image', maxCount: 1 }, { name: 'pd
 router.get("/books",getBooks)
 router.get("/single/:id", getSingleBook)
 router.post("/returnbooks",returnBooks)
+router.post("/bookmark",addBookmark)
+router.delete("/bookmark/:userId/:bookId",removeBookmark)
+router.get("/bookmark",getBookmark)
 router.get("/books/:category", getBookByCategory)
 router.delete("/books/:id", deleteBooks)
 

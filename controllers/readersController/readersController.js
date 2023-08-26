@@ -4,13 +4,16 @@ const crypto = require("crypto");
 const { addMinutes } = require("date-fns");
 const sendEmail = require("../../utils/sendMail");
 const generateToken = require("../../utils/generateToken");
-const getIp = require("../../utils/getIp");
-const getLocation = require("../../utils/GetLocation");
+// const getIp = require("../../utils/getIp");
+// const getLocation = require("../../utils/GetLocation");
 const ReconizeDevice = require("../../models/DeviceReconization/detectDevice");
 const uaParser = require("ua-parser-js");
 const otpModel = require("../../models/otpModel");
 
 exports.postUser = async (req, res) => {
+  const userAgents = req.headers["user-agent"];
+  const { width, height } = req.body;
+  const attributes = [userAgents, width, height].join("|");
   let reader = new Readers({
     fullname: req.body.fullname,
     email: req.body.email.toLowerCase(),
@@ -34,7 +37,6 @@ exports.postUser = async (req, res) => {
     userId: reader._id,
     expiresIn: addMinutes(Date.now(), 1440),
   });
-
   token = await token.save();
   if (!token) {
     return res.status(400).json({
@@ -42,6 +44,13 @@ exports.postUser = async (req, res) => {
       error: "Something went wrong",
     });
   }
+
+  let reconizeDevice = new ReconizeDevice({
+    userId: reader._id,
+    userAgents: attributes,
+  });
+
+  reconizeDevice = await reconizeDevice.save();
 
   const emailVerificationUrl = `${process.env.CLIENT_SIDE}/confirmation/${token.token}`;
   sendEmail({
@@ -195,7 +204,7 @@ exports.signIn = async (req, res) => {
 
   const user = await Readers.findOne({ email: email.toLowerCase() });
 
-  const clientIp = await getIp();
+  // const clientIp = await getIp();
 
   if (!user) {
     return res.status(401).json({
@@ -248,7 +257,7 @@ exports.signIn = async (req, res) => {
       },
     });
   } else {
-    const location = await getLocation(clientIp);
+    // const location = await getLocation(clientIp);
     let otp = new otpModel({
       userId: user._id,
       otp: Math.floor(1000 + Math.random() * 9000),
@@ -257,10 +266,6 @@ exports.signIn = async (req, res) => {
 
     otp = await otp.save();
 
-    
-
-    
-
     sendEmail({
       from: "KCTLIBRARY 📧 <kct.edu.gmail.com",
       to: user.email,
@@ -268,8 +273,8 @@ exports.signIn = async (req, res) => {
       html: `
 
     <h4>Hello ${user.fullname},</h4>
-    <p>We noticed a new sign-in to your Account from  ${result.os.name} device using ${result.browser.name} browser located near ${location.city}, ${location.country}</p>
-    <p>OTP:${otp.otp}</p>
+    <p>We noticed a new sign-in to your Account from  ${result.os.name} device using ${result.browser.name} browser.If this was you, you don't need to do anything. Just enter the below OTP to validate </p>
+    <h2>OTP:${otp.otp}</h2>
     <p>Thanks,</p>
     <p>Security Team</p>
 
@@ -277,27 +282,6 @@ exports.signIn = async (req, res) => {
     });
 
     return res.status(401).json({ success: false, newDevice: true });
-
-    // await ReconizeDevice.findOneAndUpdate(
-    //   { userId: user._id },
-    //   { $addToSet: { userAgents: attributes } },
-    //   { upsert: true }
-    // );
-
-    // const { _id, fullname, role, address, mobilenum, choosedCatgoeirs } = user;
-    // return res.json({
-    //   success: true,
-    //   token,
-    //   user: {
-    //     _id,
-    //     fullname,
-    //     role,
-    //     email,
-    //     address,
-    //     choosedCatgoeirs,
-    //     mobilenum,
-    //   },
-    // });
   }
 };
 

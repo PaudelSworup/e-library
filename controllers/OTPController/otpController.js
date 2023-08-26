@@ -12,12 +12,22 @@ exports.validateOTP = async (req, res) => {
   
   const otpFinder = await otpModel.findOne({ userId:findUser._id });
 
+
+  if(otpFinder.otp != req.body.otp){
+    return res.status(400).json({
+      success: false,
+      error: "OTP didn't match",
+    });
+  }
+
   if (!otpFinder) {
     return res.status(400).json({
       success: false,
       error: "sorry, unable to find your otp",
     });
   }
+
+  console.log(otpFinder.expiresIn)
 
   if (otpFinder.expiresIn < Date.now()) {
     res.status(401).json({
