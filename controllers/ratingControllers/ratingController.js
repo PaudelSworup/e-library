@@ -80,7 +80,7 @@ exports.recommendedBooks = async (req, res) => {
     populate: { path: "category", select: "category_name" }, // Populate the category field with the name
   });
 
-  const dataGTE3 = data.filter((rating=>rating?.rating >=3))
+  const dataGTE3 = data.filter((rating) => rating?.rating >= 3);
   // const data = await Ratings.find().populate(
   //   "book",
   //   "title category image isbn desc stock yearofpublication"
@@ -325,76 +325,167 @@ exports.listBooks = async (req, res) => {
   return res.status(200).json({ success: true, book });
 };
 
+// exports.getKnn = async (req, res) => {
+//   console.log(req.params.userid);
+//   console.log(req.params.bookid);
+//   const books = await Books.find().populate("category", "category_name");
+
+//   const userRatings = await Ratings.find();
+
+//   const getSingleRatings = await Ratings.findOne({
+//     book: req.params.bookid,
+//     user: req.params.userid,
+//   });
+
+//   // Calculate Euclidean distance between two users
+//   function calculateDistance(userA, userB) {
+//     return Math.sqrt(Math.pow(userA.rating - userB.rating, 2));
+//   }
+
+//   // Find k nearest neighbors to the target user
+//   function findNearestNeighbors(targetUser, users, k) {
+//     const distances = [];
+//     for (const user of users) {
+//       const distance = calculateDistance(targetUser, user);
+//       distances.push({ user, distance });
+//     }
+//     distances.sort((a, b) => a.distance - b.distance);
+//     return distances.slice(0, k).map((item) => item.user);
+//   }
+
+//   // Generate book recommendations based on nearest neighbors
+//   function generateRecommendations(neighbors) {
+//     const bookRecommendations = [];
+
+//     for (const book of books) {
+//       let totalRating = 0;
+//       let count = 0;
+
+//       for (const neighbor of neighbors) {
+//         const rating = userRatings.find(
+//           (rating) =>
+//             rating.user.toString() === neighbor.user.toString() &&
+//             rating.book.toString() === book._id.toString()
+//         );
+//         if (rating) {
+//           totalRating += rating.rating;
+//           count++;
+//         }
+//       }
+
+//       if (count > 0) {
+//         const averageRating = totalRating / count;
+//         bookRecommendations.push({ book, averageRating });
+//       }
+//     }
+
+//     bookRecommendations.sort((a, b) => b.averageRating - a.averageRating);
+
+//     return bookRecommendations;
+//   }
+
+//   // Example usage
+
+//   if (getSingleRatings) {
+//     const targetUser = {
+//       user: req.params.userid,
+//       _id: req.params.bookid,
+//       rating: getSingleRatings.rating,
+//     };
+//     const k = 3;
+//     const nearestNeighbors = findNearestNeighbors(targetUser, userRatings, k);
+//     const recommendations = generateRecommendations(nearestNeighbors);
+//     return res.status(200).send({ success: true, recommendations });
+//   }
+// };
+
 exports.getKnn = async (req, res) => {
-  console.log(req.params.userid);
-  console.log(req.params.bookid);
-  const books = await Books.find().populate("category", "category_name");
+  const targetUserId = req.params.userid;
+  const targetBookId = req.params.bookid;
 
-  const userRatings = await Ratings.find();
+  try {
+    // Fetch all books and user ratings in parallel
+    const [books, userRatings] = await Promise.all([
+      Books.find().populate("category", "category_name"),
+      Ratings.find(),
+    ]);
 
-  const getSingleRatings = await Ratings.findOne({
-    book: req.params.bookid,
-    user: req.params.userid,
-  });
+    // Find the target user's rating for the target book
+    const targetUserRating = userRatings.find(
+      (rating) =>
+        rating.user.toString() === targetUserId &&
+        rating.book.toString() === targetBookId
+    );
 
-  // Calculate Euclidean distance between two users
-  function calculateDistance(userA, userB) {
-    return Math.sqrt(Math.pow(userA.rating - userB.rating, 2));
-  }
-
-  // Find k nearest neighbors to the target user
-  function findNearestNeighbors(targetUser, users, k) {
-    const distances = [];
-    for (const user of users) {
-      const distance = calculateDistance(targetUser, user);
-      distances.push({ user, distance });
+    if (!targetUserRating) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Rating not found." });
     }
-    distances.sort((a, b) => a.distance - b.distance);
-    return distances.slice(0, k).map((item) => item.user);
-  }
 
-  // Generate book recommendations based on nearest neighbors
-  function generateRecommendations(neighbors) {
-    const bookRecommendations = [];
+    // Calculate Euclidean distance between two users
+    function calculateDistance(userA, userB) {
+      return Math.sqrt(Math.pow(userA.rating - userB.rating, 2));
+    }
 
-    for (const book of books) {
-      let totalRating = 0;
-      let count = 0;
+    // Find k nearest neighbors to the target user
+    function findNearestNeighbors(targetUserRating, userRatings, k) {
+      const distances = userRatings.map((userRating) => ({
+        userRating,
+        distance: calculateDistance(targetUserRating, userRating),
+      }));
 
-      for (const neighbor of neighbors) {
-        const rating = userRatings.find(
-          (rating) =>
-            rating.user.toString() === neighbor.user.toString() &&
-            rating.book.toString() === book._id.toString()
-        );
-        if (rating) {
-          totalRating += rating.rating;
-          count++;
+      // Sort by distance and select the top k neighbors
+      distances.sort((a, b) => a.distance - b.distance);
+
+      return distances.slice(1, k + 1).map((item) => item.userRating);
+    }
+
+    // Generate book recommendations based on nearest neighbors
+    function generateRecommendations(neighbors) {
+      const bookRecommendations = [];
+
+      for (const book of books) {
+        let totalRating = 0;
+        let count = 0;
+
+        for (const neighbor of neighbors) {
+          const rating = userRatings.find(
+            (userRating) =>
+              userRating.user.toString() === neighbor.user.toString() &&
+              userRating.book.toString() === book._id.toString()
+          );
+
+          if (rating) {
+            totalRating += rating.rating;
+            count++;
+          }
+        }
+
+        if (count > 0) {
+          const averageRating = totalRating / count;
+          bookRecommendations.push({ book, averageRating });
         }
       }
 
-      if (count > 0) {
-        const averageRating = totalRating / count;
-        bookRecommendations.push({ book, averageRating });
-      }
+      // Sort by average rating in descending order
+      bookRecommendations.sort((a, b) => b.averageRating - a.averageRating);
+
+      return bookRecommendations;
     }
 
-    bookRecommendations.sort((a, b) => b.averageRating - a.averageRating);
-
-    return bookRecommendations;
-  }
-
-  // Example usage
-
-  if (getSingleRatings) {
-    const targetUser = {
-      user: req.params.userid,
-      _id: req.params.bookid,
-      rating: getSingleRatings.rating,
-    };
     const k = 3;
-    const nearestNeighbors = findNearestNeighbors(targetUser, userRatings, k);
+    const nearestNeighbors = findNearestNeighbors(
+      targetUserRating,
+      userRatings,
+      k
+    );
     const recommendations = generateRecommendations(nearestNeighbors);
-    return res.status(200).send({ success: true, recommendations });
+
+    return res.status(200).json({ success: true, recommendations });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error." });
   }
 };

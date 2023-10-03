@@ -5,15 +5,24 @@ const readerModel = require("../../models/reader/readerModel");
 exports.validateOTP = async (req, res) => {
   const userAgents = req.headers["user-agent"];
   const { width, height } = req.body;
- 
 
   const attributes = [userAgents, width, height].join("|");
-  const findUser = await readerModel.findOne({email:req.body.email.toLowerCase()});
-  
-  const otpFinder = await otpModel.findOne({ userId:findUser._id });
+  const findUser = await readerModel.findOne({
+    email: req.body.email.toLowerCase(),
+  });
 
+  const otpFinder = await otpModel
+    .findOne({ userId: findUser._id })
+    .sort({ createdAt: -1 });
+  // .lean();
 
-  if(otpFinder.otp != req.body.otp){
+  console.log(otpFinder);
+
+  console.log(req.body.otp);
+  console.log(otpFinder.otp);
+  console.log(otpFinder.otp === req.body.otp);
+
+  if (otpFinder.otp !== req.body.otp) {
     return res.status(400).json({
       success: false,
       error: "OTP didn't match",
@@ -27,14 +36,14 @@ exports.validateOTP = async (req, res) => {
     });
   }
 
-  console.log(otpFinder.expiresIn)
+  console.log(otpFinder.expiresIn);
 
   if (otpFinder.expiresIn < Date.now()) {
     res.status(401).json({
       success: false,
       error: "OTP had expired",
     });
-    return await otpModel.findOneAndDelete({
+    await otpModel.findOneAndDelete({
       userId: req.params.userId,
     });
   }
@@ -45,5 +54,5 @@ exports.validateOTP = async (req, res) => {
     { upsert: true }
   );
 
-  return res.status(200).json({ success: true,message:"OTP is validated" });
+  return res.status(200).json({ success: true, message: "OTP is validated" });
 };

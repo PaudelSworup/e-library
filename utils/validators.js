@@ -2,7 +2,7 @@ const { check, validationResult } = require("express-validator");
 
 const Books = require("../models/books/booksModel");
 const User = require("../models/reader/readerModel");
-const Category = require("../models/books/categoryModel")
+const Category = require("../models/books/categoryModel");
 
 // books validation
 exports.booksValidation = [
@@ -38,18 +38,18 @@ exports.booksValidation = [
   ).notEmpty(),
 ];
 
-
 // category validation
 exports.categoryValidation = [
-  check("category_name","please enter your category name").notEmpty().custom((val)=>{
-    return Category.findOne({category_name:val}).then((cat)=>{
-      if(cat){
-        return Promise.reject("Already existed Genre");
-      }
-      
-    })
-  })
-]
+  check("category_name", "please enter your category name")
+    .notEmpty()
+    .custom((val) => {
+      return Category.findOne({ category_name: val }).then((cat) => {
+        if (cat) {
+          return Promise.reject("Already existed Genre");
+        }
+      });
+    }),
+];
 
 // user validation
 exports.readersValidation = [
@@ -113,8 +113,7 @@ exports.forgotValidation = [
     .notEmpty()
     .isEmail()
     .withMessage("Invalid email format"),
-
-]
+];
 
 // book issue request
 exports.issueRequestValidation = [
