@@ -3,26 +3,14 @@ const savedBookModel = require("../../models/books/savedBookModel");
 const Users = require("../../models/reader/readerModel");
 const sendEmail = require("../../utils/sendMail");
 const fs = require("fs");
+const Notification = require("../../models/notification/notificationModel");
 const path = require("path");
+const schedule = require("node-schedule");
 
 exports.postBooks = async (req, res) => {
-  fs.stat(req.files.pdf[0].path, (err, stats) => {
-    if (err) {
-      console.error("Error while getting file size:", err);
-      return res
-        .status(500)
-        .json({ success: false, error: "Error while getting file size" });
-    }
-    const fileSizeInBytes = stats.size;
-    if (fileSizeInBytes > 5 * 1024 * 1024) {
-      fs.unlink(req.files.image[0].path, (err) => {
-        if (err) {
-          console.log("Error while deleting the file:", err);
-        }
-        console.log("Uploaded image deleted due to size limit exceeded");
-      });
-    }
-  });
+  let users = await Users.find({ role: 0 });
+
+  // return console.log(req.body);
   let books = new Books({
     title: req.body.title,
     isbn: Number(req.body.isbn),
@@ -44,35 +32,44 @@ exports.postBooks = async (req, res) => {
       .json({ success: false, error: "Something went wrong" });
   }
 
-  let imagePath = books.image;
+  // let imagePath = books.image;
 
-  let users = await Users.find();
-  users.forEach((user) => {
-    fs.readFile(imagePath, (error, data) => {
-      if (error) {
-        console.log("error reading file", error);
-        return;
-      }
-
-      const attachments = {
-        filename: path.basename(imagePath),
-        content: data,
-        cid: "image@cid",
-      };
-
-      const emailContent = `<p>Hello, ${user.fullname}</p>
-          <p>${req.body.title} book has been added to the Library.</p>
-          <p><img src="cid:image@cid" alt="Book Image" /></p>`;
-
-      sendEmail({
-        from: "KCTLIBRARY 📧 <kct.edu.gmail.com",
-        to: user.email,
-        subject: "New Book Added",
-        html: emailContent,
-        attachments,
-      });
+  users.map(async (users) => {
+    let notification = new Notification({
+      book: books._id,
+      user: users._id,
+      date: Date.now(),
+      messageNotification: `New Book :${books?.title} added`,
+      sendAll: true,
     });
+    notification = await notification.save();
   });
+  // users.forEach((user) => {
+  //   fs.readFile(imagePath, (error, data) => {
+  //     if (error) {
+  //       console.log("error reading file", error);
+  //       return;
+  //     }
+
+  //     const attachments = {
+  //       filename: path.basename(imagePath),
+  //       content: data,
+  //       cid: "image@cid",
+  //     };
+
+  //     const emailContent = `<p>Hello, ${user.fullname}</p>
+  //         <p>${req.body.title} book has been added to the Library.</p>
+  //         <p><img src="cid:image@cid" alt="Book Image" /></p>`;
+
+  //     sendEmail({
+  //       from: "KCTLIBRARY 📧 <kct.edu.gmail.com",
+  //       to: user.email,
+  //       subject: "New Book Added",
+  //       html: emailContent,
+  //       attachments,
+  //     });
+  //   });
+  // });
 
   return res
     .status(200)

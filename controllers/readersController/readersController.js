@@ -4,8 +4,6 @@ const crypto = require("crypto");
 const { addMinutes } = require("date-fns");
 const sendEmail = require("../../utils/sendMail");
 const generateToken = require("../../utils/generateToken");
-// const getIp = require("../../utils/getIp");
-// const getLocation = require("../../utils/GetLocation");
 const ReconizeDevice = require("../../models/DeviceReconization/detectDevice");
 const uaParser = require("ua-parser-js");
 const otpModel = require("../../models/otpModel");
@@ -64,7 +62,7 @@ exports.postUser = async (req, res) => {
   });
   return res.status(200).json({
     success: true,
-    message: "User has been created, Check your email to verify your Account",
+    message: "User has been created, Check your email to Activate your Account",
   });
 };
 
@@ -140,7 +138,7 @@ exports.postEmailVerification = async (req, res) => {
   }
   return res.status(200).json({
     success: true,
-    message: `Congrats ${reader.fullname}, your email has been verified`,
+    message: `Congratulation ${reader.fullname}, your account has been successfully activated.`,
   });
 };
 
@@ -271,12 +269,17 @@ exports.signIn = async (req, res) => {
       to: user.email,
       subject: "Did you just Login to your account?",
       html: `
+      
+    <p>hey ${user.fullname}!<p>
+    <p> A sign in attemp requires further verification beacuse we did not recognize your device. To complete the sign in, enter the verification code on the unrecognized device.</p>
+    <br/>
 
-    <h4>Hello ${user.fullname},</h4>
-    <p>We noticed a new sign-in to your Account from  ${result.os.name} device using ${result.browser.name} browser.If this was you, you don't need to do anything. Just enter the below OTP to validate </p>
-    <h2>OTP:${otp.otp}</h2>
-    <p>Thanks,</p>
-    <p>Security Team</p>
+    <p>Device:${result.browser.name} on ${result.os.name} </p>
+    <p>verification code:${otp.otp} </p>
+    <br/>
+
+    <p>If you did not attemp to sign in to your account, your password may be compromised. create a new strong password for your account </p>
+    
 
     `,
     });

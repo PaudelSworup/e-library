@@ -18,6 +18,11 @@ const notificationSchema = new mongoose.Schema({
     type: Date,
   },
 
+  sendAll: {
+    type: Boolean,
+    default: false,
+  },
+
   notificationStatus: {
     type: Boolean,
     default: false,
