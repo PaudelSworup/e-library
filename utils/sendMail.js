@@ -68,3 +68,30 @@ const sendEmail = (options) => {
 };
 
 module.exports = sendEmail;
+
+// users.forEach((user) => {
+//   fs.readFile(imagePath, (error, data) => {
+//     if (error) {
+//       console.log("error reading file", error);
+//       return;
+//     }
+
+//     const attachments = {
+//       filename: path.basename(imagePath),
+//       content: data,
+//       cid: "image@cid",
+//     };
+
+//     const emailContent = `<p>Hello, ${user.fullname}</p>
+//         <p>${req.body.title} book has been added to the Library.</p>
+//         <p><img src="cid:image@cid" alt="Book Image" /></p>`;
+
+//     sendEmail({
+//       from: "KCTLIBRARY 📧 <kct.edu.gmail.com",
+//       to: user.email,
+//       subject: "New Book Added",
+//       html: emailContent,
+//       attachments,
+//     });
+//   });
+// });
